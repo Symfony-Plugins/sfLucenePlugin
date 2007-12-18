@@ -17,7 +17,7 @@ sfLucenePlugin integrates symfony and Zend Search Lucene to instantly add a sear
   * Extensible
 
 = Development Status =
-The trunk of sfLucene is highly unstable.  You are welcome to try it out and see how it works, however it has not been as extensively tested as sfLucene for symfony 1.0.
+The trunk of sfLucene is *not* supported for symfony trunk.  It might work, but it will probably more likely cause your computer to explode into a billion pieces.  You're better off using [wiki:sfLucenePlugin11] anyways.  
 
 = Installation =
   * Install the plugin (from project directory):
