@@ -16,7 +16,7 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$t = new lime_test(39, new lime_output_color());
+$t = new lime_test(51, new lime_output_color());
 
 class Foo { }
 
@@ -109,33 +109,33 @@ $criteria = new sfLuceneCriteria();
 
 try {
   $criteria->addSane('test');
-  $t->pass('->saneFind() accepts a valid query');
+  $t->pass('->addSane() accepts a valid query');
 
   $s = $criteria->getQuery()->getSubqueries();
 
-  $t->ok($s[0] == Zend_Search_Lucene_Search_QueryParser::parse('test'), '->saneFind() correctly adds a valid query');
+  $t->ok($s[0] == Zend_Search_Lucene_Search_QueryParser::parse('test'), '->addSane() correctly adds a valid query');
 } catch (Exception $e) {
-  $t->fail('->saneFind() accepts a valid query');
-  $t->skip('->saneFind() correctly adds a valid query');
+  $t->fail('->addSane() accepts a valid query');
+  $t->skip('->addSane() correctly adds a valid query');
 }
 
 try {
-  try {
-    $criteria->add('carl~');
-    $t->fail('->add() rejects an illegal query');
-  } catch (Exception $e) {
-    $t->pass('->add() rejects an illegal query');
-  }
+  $criteria->add('carl!');
+  $t->fail('->add() rejects an illegal query');
+} catch (Exception $e) {
+  $t->pass('->add() rejects an illegal query');
+}
 
-  $criteria->addSane('carl~');
-  $t->pass('->saneFind() accepts an illegal query');
+try {
+  $criteria->addSane('carl!');
+  $t->pass('->addSane() accepts an illegal query');
 
   $s = $criteria->getQuery()->getSubqueries();
 
-  $t->ok($s[1] == Zend_Search_Lucene_Search_QueryParser::parse('carl'), '->saneFind() correctly adds an illegal query');
+  $t->ok($s[1] == Zend_Search_Lucene_Search_QueryParser::parse('carl'), '->addSane() correctly adds an illegal query');
 } catch (Exception $e) {
-  $t->fail('->saneFind() accepts an illegal query');
-  $t->skip('->saneFind() correctly adds an illegal query');
+  $t->fail('->addSane() accepts an illegal query');
+  $t->skip('->addSane() correctly adds an illegal query');
 }
 
 
@@ -176,19 +176,6 @@ try {
 } catch (Exception $e) {
   $t->pass('->addField() rejects invalid values');
 }
-
-$t->diag('testing sorting');
-
-$sorts = sfLuceneCriteria::newInstance()->addSortBy('foo', SORT_ASC, SORT_REGULAR)->addSortBy('bar', SORT_DESC, SORT_NUMERIC)->getSorts();
-
-$t->is_deeply($sorts, array( array('field' => 'foo', 'order' => SORT_ASC, 'type' => SORT_REGULAR), array('field' => 'bar', 'order' => SORT_DESC, 'type' => SORT_NUMERIC)), '->addSortBy() correctly adds the sort fields');
-
-$sorts = sfLuceneCriteria::newInstance()->addAscendingSortBy('foo', SORT_STRING)->getSorts();
-$t->is_deeply($sorts, array(array('field' => 'foo', 'order' => SORT_ASC, 'type' => SORT_STRING)), '->addAscendingSortBy() correctly adds a sort field');
-
-$sorts = sfLuceneCriteria::newInstance()->addDescendingSortBy('foo', SORT_STRING)->getSorts();
-$t->is_deeply($sorts, array(array('field' => 'foo', 'order' => SORT_DESC, 'type' => SORT_STRING)), '->addDescendingSortBy() correctly adds a sort field');
-
 
 $t->diag('testing addMultiTerm()');
 $s = sfLuceneCriteria::newInstance()->addMultiTerm(range(1, 10), 'foo')->getQuery()->getSubqueries();
@@ -260,6 +247,65 @@ try {
 $s = sfLuceneCriteria::newInstance()->addRange('a', 'b', 'c', false)->getQuery()->getSubqueries();
 $q = new Zend_Search_Lucene_Search_Query_Range(new Zend_Search_Lucene_Index_Term('a', 'c'), new Zend_Search_Lucene_Index_Term('b', 'c'), false);
 $t->ok($s[0] == $s[0], '->addRange() registers a complex exclusive query');
+
+$t->diag('testing addProximity()');
+
+try {
+  sfLuceneCriteria::newInstance()->addProximity(37.7752, -122.4192, 0);
+  $t->fail('->addProximity() rejects a zero proximity');
+} catch (Exception $e) {
+  $t->pass('->addProximity() rejects a zero proximity');
+}
+
+try {
+  sfLuceneCriteria::newInstance()->addProximity(37.7752, -122.4192, 90, 0);
+  $t->fail('->addProximity() rejects a zero radius');
+} catch (Exception $e) {
+  $t->pass('->addProximity() rejects a zero radius');
+}
+
+$s = sfLuceneCriteria::newInstance()->addProximity(37.7752, -122.4192, 200)->getQuery()->getSubqueries();
+$s = $s[0]->getSubqueries();
+
+$t->ok($s[0]->isInclusive(), '->addProximity() uses inclusive range queries');
+$t->ok($s[1]->isInclusive(), '->addProximity() uses inclusive range queries');
+
+$t->is_deeply(explode(chr(0), $s[0]->getLowerTerm()->key()), array('latitude', '35.9785590093'), '->addProximity() calculates correct lower bound latitude');
+$t->is_deeply(explode(chr(0), $s[0]->getUpperTerm()->key()), array('latitude', '39.5718409907'), '->addProximity() calculates correct upper bound latitude');
+$t->is_deeply(explode(chr(0), $s[1]->getLowerTerm()->key()), array('longitude', '-124.692219999'), '->addProximity() calculates correct lower bound longitude');
+$t->is_deeply(explode(chr(0), $s[1]->getUpperTerm()->key()), array('longitude', '-120.146180001'), '->addProximity() calculates correct upper bound longitude');
+
+
+$t->diag('testing sorting');
+
+$sorts = sfLuceneCriteria::newInstance()->addSortBy('foo', SORT_ASC, SORT_REGULAR)->addSortBy('bar', SORT_DESC, SORT_NUMERIC)->getSorts();
+
+$t->is_deeply($sorts, array( array('field' => 'foo', 'order' => SORT_ASC, 'type' => SORT_REGULAR), array('field' => 'bar', 'order' => SORT_DESC, 'type' => SORT_NUMERIC)), '->addSortBy() correctly adds the sort fields');
+
+$sorts = sfLuceneCriteria::newInstance()->addAscendingSortBy('foo', SORT_STRING)->getSorts();
+$t->is_deeply($sorts, array(array('field' => 'foo', 'order' => SORT_ASC, 'type' => SORT_STRING)), '->addAscendingSortBy() correctly adds a sort field');
+
+$sorts = sfLuceneCriteria::newInstance()->addDescendingSortBy('foo', SORT_STRING)->getSorts();
+$t->is_deeply($sorts, array(array('field' => 'foo', 'order' => SORT_DESC, 'type' => SORT_STRING)), '->addDescendingSortBy() correctly adds a sort field');
+
+$t->diag('testing scoring');
+
+class FooScoring extends Zend_Search_Lucene_Search_Similarity_Default
+{
+}
+
+$fooScoring = new FooScoring;
+
+$t->is(sfLuceneCriteria::newInstance()->getScoringAlgorithm(), null, '->getScoringAlgorithm() is null by default');
+$t->ok(sfLuceneCriteria::newInstance()->setScoringAlgorithm($fooScoring)->getScoringAlgorithm() === $fooScoring, '->setScoringAlgorithm() changes the algorithm');
+$t->is(sfLuceneCriteria::newInstance()->setScoringAlgorithm(null)->getScoringAlgorithm(), null, '->setScoringAlgorithm() with null algorithm reverts to default');
+
+try {
+  sfLuceneCriteria::newInstance()->setScoringAlgorithm('foo');
+  $t->fail('->setScoringAlgorithm() rejects invalid algorithms');
+} catch (Exception $e) {
+  $t->pass('->setScoringAlgorithm() rejects invalid algorithms');
+}
 
 $t->diag('testing getNewCriteria()');
 

@@ -5,7 +5,7 @@ testLucene:
         id:
           type: unindexed
           boost: 1
-        title:  
+        title:
           type: text
           boost: 2
         description:
@@ -13,9 +13,12 @@ testLucene:
           boost: 1
       title: title
       description: description
-      categories: Forum
+      categories: [Forum]
       route: "forum/showForum?id=%id%"
       validator: isIndexable
+      rebuild_limit: 5
+      peer: FakeForumPeer
+      partial: forumResult
   index:
     encoding: UTF-8
     cultures: [en, fr]
@@ -28,3 +31,7 @@ testLucene:
   interface:
     categories: on
     advanced: on
+
+fooLucene:
+  index:
+    cultures: [en]

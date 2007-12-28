@@ -23,10 +23,9 @@ class sfLuceneModelResult extends sfLuceneResult
   {
     $model = $this->retrieveModel();
 
-    if (is_string($model->get('title')))
+    if ($model->has('title'))
     {
-      $getter = 'get' . $model->get('title');
-      return $this->$getter();
+      return $this->result->getDocument()->getFieldValue($model->get('title'));
     }
     else
     {
@@ -34,14 +33,12 @@ class sfLuceneModelResult extends sfLuceneResult
       {
         if ($model->get('fields')->has($check))
         {
-          $getter = 'get' . $check;
-
-          return $this->$getter();
+          return strip_tags($this->result->getDocument()->getFieldValue($check));
         }
       }
     }
 
-    return $this->getInternalModel();
+    return 'No title available.';
   }
 
   /**
@@ -51,28 +48,18 @@ class sfLuceneModelResult extends sfLuceneResult
   {
     $model = $this->retrieveModel();
 
-    if ($model->has('route'))
+    if (!$model->has('route'))
     {
-      throw new sfLuceneIndexerException(sprintf('A route for model "%s" was not defined in the search.yml file.  Did you define one for this application?', $this->getInternalModel()));
+      throw new sfLuceneIndexerException(sprintf('A route for model "%s" was not defined.', $this->getInternalModel()));
     }
 
-    return preg_replace_callback('/%(\w+)%/', array($this, 'internalUriCallback'), $model->get('route'));
-  }
-
-  /**
-  * Callback for self::getInternalUri()
-  */
-  protected function internalUriCallback($matches)
-  {
-    $getter = 'get' . $matches[1];
-
-    return $this->$getter();
+    return preg_replace('/%(\w+?)%/e', '$this->result->getDocument()->getFieldValue("$1")', $model->get('route'));
   }
 
   /**
   * Gets the partial specified for this result.
   */
-  public function getInternalPartial()
+  public function getInternalPartial($module = 'sfLucene')
   {
     $model = $this->retrieveModel();
 
@@ -81,29 +68,27 @@ class sfLuceneModelResult extends sfLuceneResult
       return $model->get('partial');
     }
 
-    return parent::getInternalPartial();
+    return parent::getInternalPartial($module);
   }
 
   public function getInternalDescription()
   {
     $model = $this->retrieveModel();
 
-    if (is_string($model->get('description')))
+    if ($model->has('description'))
     {
-      $getter = 'get' . $model->get('description');
-      return strip_tags($this->$getter());
+      return strip_tags($this->result->getDocument()->getFieldValue($model->get('description')));
     }
 
     foreach (array('description','summary','about') as $check)
     {
       if ($model->get('fields')->has($check))
       {
-        $getter = 'get' . $check;
-        return strip_tags($this->$getter());
+        return strip_tags($this->result->getDocument()->getFieldValue($check));
       }
     }
 
-    return parent::getInternalDescription();
+    return 'No description available.';
   }
 
   /**

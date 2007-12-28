@@ -21,12 +21,12 @@ function include_search_result($result, $query = null)
 
 function include_search_controls($form)
 {
-  include_partial(sfContext::getInstance()->getModuleName() . '/controls', array('form' => $form));
+  include_partial('sfLucene/controls', array('form' => $form));
 }
 
-function include_search_pager($pager, $radius = 5)
+function include_search_pager($pager, $form, $radius = 5)
 {
-  include_component('sfLucene', 'pagerNavigation', array('pager' => $pager, 'radius' => $radius));
+  include_partial('sfLucene/pagerNavigation', array('pager' => $pager, 'form' => $form, 'radius' => $radius));
 }
 
 function highlight_result_text($text, $query, $size = 200, $highlighter = '<strong class="highlight">%s</strong>')
@@ -74,13 +74,4 @@ function add_highlight_qs($query, $keywords)
   $query .= 'sf_highlight=' . implode($keywords, ' ') . $suffix;
 
   return $query;
-}
-
-function select_for_search_categories($categories)
-{
-  $n_categories = array('0' => '--All--');
-
-  $n_categories += array_combine($categories, $categories);
-
-  return options_for_select($n_categories, 0);
 }

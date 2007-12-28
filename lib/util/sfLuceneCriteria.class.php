@@ -30,6 +30,8 @@ class sfLuceneCriteria
 
   protected $sorts = array();
 
+  protected $scoring = null;
+
   public function __construct()
   {
     sfLuceneToolkit::loadZend();
@@ -236,6 +238,60 @@ class sfLuceneCriteria
     return $this->add($query, $type);
   }
 
+  /**
+   * Adds a proximity query to restrict by distance from longitude and latitude.
+   *
+   * This method will do a pretty good calculation to restrict the results to
+   * fall under a certain distance from an origin point.
+   *
+   * This method is not restricted to one particular unit, except you must be
+   * consistent!  This means you can use miles or kilometers (or centimeters)
+   * and you can use degrees North or degrees South.
+   *
+   * The average radius of Earth is 3962 mi or 6378.1 km.
+   *
+   * @param float $latitude The origin latitude in degrees
+   * @param float $longitude The origin longitude in degrees
+   * @param int $proximity The maximun proximity in any unit.
+   * @param int $radius The average radius of Earth in the same unit as $proximity
+   * @param string $latitudeField The field to search under for latitudes.
+   * @param string $longitudeField The field to search under for longitude.
+   * @param mixed $type The type of restraint
+   */
+  public function addProximity($latitude, $longitude, $proximity, $radius = 6378.1, $latitudeField = 'latitude', $longitudeField = 'longitude', $type = true)
+  {
+    if ($radius <= 0)
+    {
+      throw new sfLuceneException('Radius must be greater than 0');
+    }
+    elseif ($proximity <= 0)
+    {
+      throw new sfLuceneException('Proximity must be greater than 0');
+    }
+
+    $perLatitude = M_PI * $radius / 180;
+
+    $latitudeChange = $proximity / $perLatitude;
+    $north = $latitude + $latitudeChange;
+    $south = $latitude - $latitudeChange;
+
+    $longitudeChange = $proximity / (cos(deg2rad($latitude)) * $perLatitude);
+    $east = $longitude + $longitudeChange;
+    $west = $longitude - $longitudeChange;
+
+    $latitudeLower = min($north, $south);
+    $latitudeUpper = max($north, $south);
+
+    $longitudeLower = min($east, $west);
+    $longitudeUpper = max($east, $west);
+
+    $subquery = new self;
+    $subquery->addRange($latitudeLower, $latitudeUpper, $latitudeField, true, true);
+    $subquery->addRange($longitudeLower, $longitudeUpper, $longitudeField, true, true);
+
+    return $this->add($subquery, $type);
+  }
+
   public function addAscendingSortBy($field, $type = SORT_REGULAR)
   {
     return $this->addSortBy($field, SORT_ASC, $type);
@@ -254,6 +310,22 @@ class sfLuceneCriteria
   }
 
   /**
+   * Sets the scoring algorithm for this query.
+   * @param null|Zend_Search_Lucene_Search_Similarity $algorithm An instance of the algorithm to use (null for default)
+   */
+  public function setScoringAlgorithm($algorithm)
+  {
+    if ($algorithm != null && !($algorithm instanceof Zend_Search_Lucene_Search_Similarity))
+    {
+      throw new sfLuceneException('Scoring algorithm must either be null (for default) or an instance of Zend_Search_Lucene_Search_Similarity');
+    }
+
+    $this->scoring = $algorithm;
+
+    return $this;
+  }
+
+  /**
    * Returns a Zend_Search_Lucene query that can be fed directly to Lucene
    */
   public function getQuery()
@@ -264,6 +336,11 @@ class sfLuceneCriteria
   public function getSorts()
   {
     return $this->sorts;
+  }
+
+  public function getScoringAlgorithm()
+  {
+    return $this->scoring;
   }
 
   public function getNewCriteria()

@@ -49,7 +49,7 @@ class sfLuceneActionIndexer extends sfLuceneIndexer
   {
     extract($this->getActionProperties());
 
-    if ( $this->deleteGuid( $this->getGuid($params) ) && $this->shouldLog())
+    if ( $this->deleteGuid( $this->getGuid($params) ) )
     {
       $formatter = new sfAnsiColorFormatter();
 
@@ -58,13 +58,6 @@ class sfLuceneActionIndexer extends sfLuceneIndexer
           $formatter->formatSection('indexer', sprintf('Deleted action "%s" of module "%s"', $action, $module))
         ))
       );
-
-      $categories = $this->getModelCategories();
-
-      foreach ($categories as $category)
-      {
-        $this->removeCategory($category);
-      }
     }
 
     return $this;
@@ -86,7 +79,7 @@ class sfLuceneActionIndexer extends sfLuceneIndexer
 
     $content = $output->getContent();
 
-    $doc = $this->getHtmlDocString($content);
+    $doc = Zend_Search_Lucene_Document_Html::loadHtml($content);
 
     $title_field = $this->getLuceneField('text', 'sfl_title', $output->getLastTitle());
     $title_field->boost = 2;
@@ -107,6 +100,8 @@ class sfLuceneActionIndexer extends sfLuceneIndexer
 
       $doc->addField( $this->getLuceneField('text', 'sfl_category', implode(', ', $categories)) );
     }
+
+    $doc->addField( $this->getLuceneField('unindexed', 'sfl_categories_cache', serialize($categories)) );
 
     $guid = $this->getGuid($params);
 
@@ -209,7 +204,7 @@ class sfLuceneActionIndexer extends sfLuceneIndexer
       $browser->setCredentials($credentials);
       $browser->setLayout($layout);
       $browser->setMethod('GET');
-      $browser->setCulture($this->getCulture());
+      $browser->setCulture($this->getSearch()->getParameter('culture'));
 
       return $browser;
     }

@@ -15,7 +15,6 @@
   */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
-require dirname(__FILE__) . '/../../bin/FakeHighlighter.php';
 
 $t = new lime_test(21, new lime_output_color());
 
@@ -27,7 +26,18 @@ $request = $context->getRequest();
 
 sfConfig::set('sf_i18n', false);
 
-$highlight = new FakeHighlighter();
+$highlight = new sfLuceneHighlightFilter($context, array(
+  'highlight_qs'              => 'h',
+  'notice_tag'                => '~notice~',
+  'highlight_strings'         => array(
+                                    '<highlighted>%s</highlighted>',
+                                    '<highlighted2>%s</highlighted2>'
+                                ),
+  'notice_referer_string'     => '<from>%from%</from><keywords>%keywords%</keywords><remove>%remove%</remove>',
+  'notice_string'             => '<keywords>%keywords%</keywords><remove>%remove%</remove>',
+  'remove_string'             => '~remove~',
+  'css'                       => 'search.css',
+));
 
 $t->diag('testing validation');
 
@@ -152,16 +162,7 @@ $response->setContentType('text/html');
 
 $t->diag('testing i18n');
 
-sfConfig::add(array(
-  'sf_i18n_default_culture' => 'en_US',
-  'sf_i18n_source' => 'XLIFF',
-  'sf_i18n_debug' => false,
-  'sf_i18n_untranslated_prefix' => '[T]',
-  'sf_i18n_untranslated_suffix' => '[/T]',
-));
-
-sfConfig::set('sf_i18n', true);
-sfContext::getInstance()->set('i18n', new sfI18N(sfContext::getInstance()));
+configure_i18n();
 
 $response->setContent('<body>highlight the keyword</body>');
 $request->setParameter('h', 'keyword');
