@@ -110,7 +110,7 @@ $t->is($h->get('name'), 'testLucene', 'property "name" is the name of the index'
 $t->is($h->get('culture'), 'en', 'property "culture" is the culture of the index');
 $t->is($h->get('enabled_cultures'), array('en', 'fr'), 'property "enabled_cultures" contains all enabled cultures');
 $t->like($h->get('index_location'), '#/index/testLucene/en$#', 'property "index_location" is the correct path');
-$t->is($h->get('encoding'), 'utf-8', 'property "encoding" is the encoding');
+$t->is($h->get('encoding'), 'UTF-8', 'property "encoding" is the encoding');
 $t->is($h->get('stop_words'), array('and', 'the'), 'property "stop_words" contains the stop words');
 $t->is($h->get('short_words'), 2, 'property "short_words" is the short word limit');
 $t->is($h->get('mb_string'), true, 'property "mb_string" indicates if to use mb_string functions');
@@ -176,7 +176,7 @@ $t->is($lucene->getContext(), sfContext::getInstance(), '->getContext() returns 
 $t->diag('testing ->configure()');
 $lucene->configure();
 
-$t->is(Zend_Search_Lucene_Search_QueryParser::getDefaultEncoding(), 'utf-8', '->configure() configures the query parsers encoding');
+$t->is(Zend_Search_Lucene_Search_QueryParser::getDefaultEncoding(), 'UTF-8', '->configure() configures the query parsers encoding');
 
 foreach (array('Text', 'TextNum', 'Utf8', 'Utf8Num') as $type)
 {
@@ -232,10 +232,10 @@ $originalLucene = $lucene->getParameter('lucene');
 $lucene->setParameter('lucene', $mock);
 
 $t->is($lucene->find('foo'), range(1, 100), '->find() returns what ZSL returns');
-$t->ok(sfLuceneCriteria::newInstance()->add('foo')->getQuery() == $mock->args[0], '->find() parses string queries');
+$t->ok(sfLuceneCriteria::newInstance($lucene)->add('foo')->getQuery() == $mock->args[0], '->find() parses string queries');
 $t->isa_ok($mock->scoring, 'Zend_Search_Lucene_Search_Similarity_Default', '->find() with a string uses default scoring algorithm');
 
-$query = sfLuceneCriteria::newInstance()->add('foo')->addRange('a', 'b', 'c');
+$query = sfLuceneCriteria::newInstance($lucene)->add('foo')->addRange('a', 'b', 'c');
 $lucene->find($query);
 $t->ok($query->getQuery() == $mock->args[0], '->find() accepts sfLuceneCriteria queries');
 $t->isa_ok($mock->scoring, 'Zend_Search_Lucene_Search_Similarity_Default', '->find() without specified scorer uses default scoring algorithm');
@@ -246,11 +246,11 @@ $t->ok($query == $mock->args[0], '->find() accepts Zend API queries');
 $t->isa_ok($mock->scoring, 'Zend_Search_Lucene_Search_Similarity_Default', '->find() with a Zend API queries uses default scoring algorithm');
 
 $scoring = new MockScoring;
-$lucene->find(sfLuceneCriteria::newInstance()->add('foo')->setScoringAlgorithm($scoring));
+$lucene->find(sfLuceneCriteria::newInstance($lucene)->add('foo')->setScoringAlgorithm($scoring));
 $t->is($mock->scoring, $scoring, '->find() changes the scoring algorithm if sfLuceneCriteria specifies it');
 $t->isa_ok(Zend_Search_Lucene_Search_Similarity::getDefault(), 'Zend_Search_Lucene_Search_Similarity_Default', '->find() resets the default scoring algorithm after processing');
 
-$lucene->find(sfLuceneCriteria::newInstance()->add('foo')->addAscendingSortBy('sort1')->addDescendingSortBy('sort2', SORT_NUMERIC));
+$lucene->find(sfLuceneCriteria::newInstance($lucene)->add('foo')->addAscendingSortBy('sort1')->addDescendingSortBy('sort2', SORT_NUMERIC));
 
 $t->is_deeply(array_splice($mock->args, 1), array('sort1', SORT_REGULAR, SORT_ASC, 'sort2', SORT_NUMERIC, SORT_DESC), '->find() uses sorting rules from sfLuceneCriteria');
 
@@ -261,7 +261,7 @@ $t->is($results->getSearch(), $lucene, '->friendlyFind() is connected to the Luc
 
 $mock->e = true;
 try {
-  $lucene->find(sfLuceneCriteria::newInstance()->add('foo')->setScoringAlgorithm(new MockScoring));
+  $lucene->find(sfLuceneCriteria::newInstance($lucene)->add('foo')->setScoringAlgorithm(new MockScoring));
   $t->fail('if ZSL throws exception, ->find() also throws the exception');
   $t->skip('if ZSL throws exception, ->find() stills resets the scoring algorithm');
 } catch (Exception $e) {
@@ -417,7 +417,7 @@ function callListener($event)
   return false;
 }
 
-$lucene->getContext()->getEventDispatcher()->connect('lucene.lucene.method_not_found', 'callListener');
+$lucene->getEventDispatcher()->connect('lucene.method_not_found', 'callListener');
 
 try {
   $lucene->someBadMethod();

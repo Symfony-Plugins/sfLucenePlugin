@@ -26,7 +26,11 @@ class sfLucenePropelIndexerHandler extends sfLuceneModelIndexerHandler
     // calculate total number of pages
     $count = call_user_func(array($peer, 'doCount'), new Criteria);
 
+    $this->getSearch()->getEventDispatcher()->notify(new sfEvent($this, 'indexer.log', array('Discovered %d instances of model "%s"', $count, $name)));
+
     $totalPages = ceil($count / $per);
+
+    $propel13 = class_exists('PropelPDO', true) ? true : false;
 
     for ($page = 0; $page < $totalPages; $page++)
     {
@@ -34,16 +38,31 @@ class sfLucenePropelIndexerHandler extends sfLuceneModelIndexerHandler
       $c->setOffset($page * $per);
       $c->setLimit($per);
 
-      $rs = call_user_func(array($peer, 'doSelectRS'), $c);
-
-      while ($rs->next())
+      if($propel13)
       {
-        $instance = new $name;
-        $instance->hydrate($rs);
+        $rs = call_user_func(array($peer, 'doSelectStmt'), $c);
+        while ($row = $rs->fetch(PDO::FETCH_NUM))
+        {
+          $instance = new $name;
+          $instance->hydrate($row);
 
-        $this->getFactory()->getModel($instance)->save();
+          $this->getFactory()->getModel($instance)->save();
 
-        unset($instance); // free memory
+          unset($instance); // free memory
+        }
+      }
+      else
+      {
+        $rs = call_user_func(array($peer, 'doSelectRS'), $c);
+        while ($rs->next())
+        {
+          $instance = new $name;
+          $instance->hydrate($rs);
+
+          $this->getFactory()->getModel($instance)->save();
+
+          unset($instance); // free memory
+        }
       }
 
       unset($rs); // free memory

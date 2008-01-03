@@ -52,10 +52,12 @@ class sfLuceneHighlightFilter extends sfFilter
         'remove_string'             => '[<a href="%url%">remove highlighting</a>]',
         'css'                       => '../sfLucenePlugin/css/search.css',
         'possible_refers'           => array(
-                                        'google'  => array('qs' => 'q', 'name' => 'Google'),
-                                        'yahoo'   => array('qs' => 'p', 'name' => 'Yahoo'),
-                                        'msn'     => array('qs' => 'q', 'name' => 'MSN'),
-                                        'ask'     => array('qs' => 'q', 'name' => 'Ask')
+                                        'google'  => array('qs' => 'q',         'name' => 'Google'),
+                                        'yahoo'   => array('qs' => 'p',         'name' => 'Yahoo!'),
+                                        'msn'     => array('qs' => 'q',         'name' => 'MSN'),
+                                        'live'    => array('qs' => 'q',         'name' => 'Live'),
+                                        'ask'     => array('qs' => 'q',         'name' => 'Ask'),
+                                        'a9'      => array('qs' => 'query',     'name' => 'A9'),
                                       )
       )
     );
@@ -66,6 +68,9 @@ class sfLuceneHighlightFilter extends sfFilter
     return true;
   }
 
+  /**
+   * Executes the filter
+   */
   public function execute($filterChain)
   {
     $filterChain->execute();
@@ -94,15 +99,21 @@ class sfLuceneHighlightFilter extends sfFilter
 
     try
     {
-      if (!$this->highlight())
-      {
-        $this->removeNotice();
-      }
+      $this->highlight();
     }
     catch (sfLuceneHighlighterException $e)
     {
       $timer->addTime();
-      throw $e;
+
+      $this->getContext()->getEventDispatcher()->notify(new sfEvent($this, 'application.log', array($e->getMessage(), 'priority' => sfLogger::WARNING)));
+
+      if ($e instanceof sfLuceneHighlighterXMLException)
+      {
+        $errors = $e->getProblems();
+        $errors['priority'] = sfLogger::ERR;
+
+        $this->getContext()->getEventDispatcher()->notify(new sfEvent($this, 'application.log', $errors));
+      }
     }
     catch (Exception $e)
     {
@@ -113,34 +124,50 @@ class sfLuceneHighlightFilter extends sfFilter
     $timer->addTime();
   }
 
+  /**
+   * Attempt to highlight the page
+   * @return bool True if highlighting occured, false otherwise
+   */
   protected function highlight()
   {
-    $terms = $this->getContext()->getRequest()->getParameter( $this->getParameter('highlight_qs'));
-    $terms = $this->prepareTerms($terms);
+    $terms = $this->getContext()->getRequest()->getParameter($this->getParameter('highlight_qs'));
 
-    if (count($terms))
+    // attempt to highlight from sfLucene
+    if ($terms)
     {
+      $terms = $this->prepareTerms($terms);
+
+      $this->doHighlight($terms);
       $this->addNotice($terms);
       $this->addCss();
-      $this->doHighlight($terms);
 
       return true;
     }
+    // attempt to highlight from referer (ie, google)
     elseif ($this->getParameter('check_referer'))
     {
       $referer = $this->getContext()->getRequest()->getReferer();
 
+      // continue only if we have a referer
       if ($referer)
       {
+        // go through each referer and stop once we have a match
         foreach ($this->getParameter('possible_refers') as $domain => $value)
         {
-          if (preg_match($this->getRefererRegex($domain, $value['qs']), $referer, $matches))
+          $regex = '#^https?://(?:\w+\.)*' . preg_quote($domain, '#') . '(?:\.[a-z]+)+.*' . preg_quote($value['qs'], '#') . '=(.*?)(&|$)#';
+
+          // valid referer?
+          if (preg_match($regex, $referer, $matches))
           {
+            // referer match.  highlight!
+
             $terms = $this->prepareTerms($matches[1]);
 
+            $this->doHighlight($terms);
             $this->addNotice($terms, $value['name']);
             $this->addCss();
-            $this->doHighlight($terms);
+
+            // stop looking for referers now.
 
             return true;
           }
@@ -148,21 +175,27 @@ class sfLuceneHighlightFilter extends sfFilter
       }
     }
 
+    $this->removeNotice();
     return false;
   }
 
-  protected function doHighlight($terms)
+  /**
+   * Highlights the content for $terms
+   */
+  protected function doHighlight(array $terms)
   {
     $content = $this->getContext()->getResponse()->getContent();
 
-    $lighter = new sfLuceneHighlighter($content);
+    // configure highlighter
+    $lighter = new sfLuceneHighlighterXHTML($content);
     $lighter->addKeywords($terms);
-    $lighter->addHighlighters($this->getParameter('highlight_strings'));
-    $lighter->hasBody(true);
 
-    $this->getContext()->getResponse()->setContent($lighter->highlight());
+    $this->getContext()->getResponse()->setContent($lighter->highlight()->export());
   }
 
+  /**
+   * Add the neccessary CSS for the response
+   */
   protected function addCss()
   {
     $content = $this->getContext()->getResponse()->getContent();
@@ -180,15 +213,9 @@ class sfLuceneHighlightFilter extends sfFilter
     }
   }
 
-  protected function prepareTerms($terms)
-  {
-    $terms = preg_split('/\W+/', trim($terms), -1, PREG_SPLIT_NO_EMPTY);
-
-    $terms = array_unique($terms);
-
-    return $terms;
-  }
-
+  /**
+   * Removes the notice token from the content because highlighting didn't happen
+   */
   protected function removeNotice()
   {
     $this->getContext()->getResponse()->setContent(
@@ -196,11 +223,21 @@ class sfLuceneHighlightFilter extends sfFilter
     );
   }
 
+  /**
+   * Replace the notice with a message that highlighting did occur
+   */
   protected function addNotice($terms, $from = null)
   {
     $content = $this->getContext()->getResponse()->getContent();
 
-    $term_string = implode($terms, ', ');
+    $term_string = '';
+
+    foreach ($terms as $term)
+    {
+      $term_string .= $term->getHighlighter()->highlight($term->getName()) . ', ';
+    }
+
+    $term_string = substr($term_string, 0, -2);
 
     $route = $route = $this->getContext()->getRouting()->getCurrentInternalUri();
     $route = preg_replace('/(\?|&)' . $this->getParameter('highlight_qs') . '=.*?(&|$)/', '$1', $route);
@@ -222,6 +259,16 @@ class sfLuceneHighlightFilter extends sfFilter
     $this->getContext()->getResponse()->setContent($content);
   }
 
+  protected function prepareTerms($terms)
+  {
+    $highlighters = sfLuceneHighlighterMarkerSprint::generate($this->getParameter('highlight_strings'));
+
+    return sfLuceneHighlighterKeywordNamedInsensitive::explode($highlighters, mb_strtolower($terms));
+  }
+
+  /**
+   * Helper function to do translations
+   */
   protected function translate($text, $args)
   {
     if (sfConfig::get('sf_i18n', false) && $this->getContext()->getI18N())
@@ -232,13 +279,5 @@ class sfLuceneHighlightFilter extends sfFilter
     {
       return str_replace(array_keys($args), array_values($args), $text);
     }
-  }
-
-  protected function getRefererRegex($domain, $qs)
-  {
-    $domain = preg_quote($domain, '#');
-    $qs = preg_quote($qs, '#');
-
-    return '#^https?://(?:\w+\.)*' . $domain . '(?:\.[a-z]+)+.*' . $qs . '=(.*?)(&|$)#';
   }
 }

@@ -55,6 +55,8 @@ class sfLuceneActionIndexerHandler extends sfLuceneIndexerHandler
 
     if (isset($actions[$this->getSearch()->getParameter('name')]))
     {
+      $this->getSearch()->getEventDispatcher()->notify(new sfEvent($this, 'indexer.log', array('Discovered %d actions in module "%s"', count($actions[$this->getSearch()->getParameter('name')]), $module)));
+
       foreach ($actions[$this->getSearch()->getParameter('name')] as $action => $properties)
       {
         $this->getFactory()->getAction($module, $action)->save();

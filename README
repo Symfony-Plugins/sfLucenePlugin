@@ -3,7 +3,7 @@ sfLucenePlugin integrates symfony and Zend Search Lucene to instantly add a sear
 
 = Requirements =
   * symfony SVN 1.1 branch checkout (latest revision only!)
-  * Propel 1.2 (1.3 untested)
+  * Propel 1.2 / 1.3
   * PHP 5.2.x+
 
 sfLucene ships with all external dependencies satisfied and will work on both private and shared hosting environments.
@@ -219,8 +219,6 @@ all:
     enabled_modules: [default, sfLucene]
 }}}
 
-You are free to define your own routes in the routing.yml file.
-
 If you have specified multiple indexes in your search.yml files, you need to configure which index that you want to search.  You do this by opening the app.yml file and adding the configuration setting:
 
 {{{
@@ -291,6 +289,8 @@ all:
 This will prevent sfLucene from giving the user the option to use the advanced mode.
 
 == Routing ==
+Note: This is currently broken because symfony 1.1 does not currently support this.  The symfony god, Fabien, is planning to fix this.  Until then, you have to register your own routes.  See ticket #2408 and symfony-devs mailing list.
+
 sfLucene will automatically register friendly routes with symfony.  For example, surfing to {{{ http://example.org/search }}} will route to sfLucene.  If you would like to customize these routes, you can disable them in the app.yml file with:
 
 {{{
@@ -385,6 +385,8 @@ highlight:
 
 If you need to configure it more, it is possible to extend the highlighting class.  Refer to the API documentation for this.
 
+Note: If you experience extremely slow page response times when using the highlighting filter (300ms to 2000ms), then you are recommended to reconfigure your XML catalog.  For instructions on how to do this, open the tarball XMLCatalog.tar.gz and follow the instructions there.
+
 = Categories =
 Each document in the index can be tied to one or more categories.  It is then possible to limit your search results to that category in the provided interface.  To enable this, you must define a "categories" key to your models or actions.  For instance, an example model:
 
@@ -436,11 +438,21 @@ Then, you must configure sfLucene with your plugin.  In project/plugins/sfMyPlug
 = Custom Indexers =
 
 == For Individual Models ==
-sfLucene supports custom indexers.  Custom indexers are great for complicated data models where the standard indexer would not work.  To make a custom Propel indexer, create a class that extends sfLucenePropelIndexer.  In this class, you optionally define insert(), shouldIndex(), delete(), and validate() methods. A sample indexer for sfSimpleCMS is below:
+sfLucene supports custom indexers.  Custom indexers are great for complicated data models where the standard indexer would not work.  To make a custom Propel indexer, create a class that extends sfLucenePropelIndexer.  In this class, you optionally define insert(), shouldIndex(), and delete() methods. A sample indexer for sfSimpleCMS is below:
 
 {{{
 class sfSimpleCMSIndexer extends sfLucenePropelIndexer
 {
+  public function __construct($search, $instance)
+  {
+    if (!($this->getModel() instanceof sfSimpleCMSPage))
+    {
+      throw new sfLuceneIndexerException(__CLASS__ . ' can only process sfSimpleCMSPage instances');
+    }
+
+    parent::__construct($search, $instance);
+  }
+
   /**
    * Inserts the model into the index.
    */
@@ -448,12 +460,14 @@ class sfSimpleCMSIndexer extends sfLucenePropelIndexer
   {
     if (!$this->shouldIndex())
     {
+      $this->getSearch()->getEventDispatcher()->notify(new sfEvent($this, 'indexer.log', array('Ignoring sfSimpleCMS page from index with primary key = %s', $this->getModel()->getPrimaryKey())));
+
       return $this;
     }
 
-    $doc = $this->getNewDocument();
+    $doc = $this->getBaseDocument();
 
-    $slots = $this->getModel()->getSlots( $this->getCulture() );
+    $slots = $this->getModel()->getSlots($this->getSearch()->getParameter('culture'));
 
     $slotText = '';
 
@@ -462,31 +476,16 @@ class sfSimpleCMSIndexer extends sfLucenePropelIndexer
       $slotText .= strip_tags($slot->getValue()) . "\n\n";
     }
 
-    $doc->addField( $this->getLuceneField('text', 'description', $slotText) );
-    $doc->addField( $this->getLuceneField('text', 'title', $this->getModel()->getSlotValue('title', $this->getCulture()) ));
-    $doc->addField( $this->getLuceneField('unindexed', 'slug', $this->getModel()->getSlug() ));
+    $doc->addField($this->getLuceneField('text', 'description', $slotText));
+    $doc->addField($this->getLuceneField('text', 'title', $this->getModel()->getSlotValue('title', $this->getSearch()->getParameter('culture'))));
+    $doc->addField($this->getLuceneField('unindexed', 'slug', $this->getModel()->getSlug()));
 
-    $categories = $this->getModelCategories();
-
-    if (count($categories))
-    {
-      foreach ($categories as $category)
-      {
-        $this->addCategory($category);
-      }
-
-      $doc->addField( $this->getLuceneField('text', 'sfl_category', implode(', ', $categories)) );
-    }
-
-    if ($this->shouldLog())
-    {
-      $this->echoLog(sprintf('Inserted model "%s" with PK = %s', $this->getModelName(), $this->getModel()->getPrimaryKey()));
-    }
-
-    $doc->addField($this->getLuceneField('unindexed', 'sfl_model', $this->getModelName()));
-    $doc->addField($this->getLuceneField('unindexed', 'sfl_type', 'model'));
+    $doc = $this->configureDocumentCategories($doc);
+    $doc = $this->configureDocumentMetas($doc);
 
     $this->addDocument($doc, $this->getModelGuid());
+
+    $this->getSearch()->getEventDispatcher()->notify(new sfEvent($this, 'indexer.log', array('Inserted sfSimpleCMSPage to index with primary key = %s', $this->getModel()->getPrimaryKey())));
   }
 
   /**
@@ -495,26 +494,6 @@ class sfSimpleCMSIndexer extends sfLucenePropelIndexer
   protected function shouldIndex()
   {
     return $this->getModel()->getIsPublished() ? true : false;
-  }
-
-  /**
-   * Validates the model to make sure we really can process it.
-   */
-  protected function validate()
-  {
-    $response = parent::validate();
-
-    if ($response)
-    {
-      return $response;
-    }
-
-    if (!($this->getModel() instanceof sfSimpleCMSPage))
-    {
-      return __CLASS__ . ' can only process sfSimpleCMSPage instances';
-    }
-
-    return null;
   }
 }
 }}}
