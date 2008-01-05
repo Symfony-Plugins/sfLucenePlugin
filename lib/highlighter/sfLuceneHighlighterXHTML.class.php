@@ -41,18 +41,13 @@ class sfLuceneHighlighterXHTML extends sfLuceneHighlighterXML
     $this->xpathQuery = '/' . $ns . 'html/' . $ns . 'body';
   }
 
-  protected function doHighlightNode(DOMNode $node)
-  {
-    if ($this->ignoreNode($node))
-    {
-      return;
-    }
-
-    parent::doHighlightNode($node);
-  }
-
   protected function ignoreNode(DOMNode $node)
   {
-    return ($node->nodeName == 'script' || $node->nodeName == 'style' || $node->nodeName == 'textarea');
+    if (!parent::ignoreNode($node))
+    {
+      return ($node->nodeName == 'script' || $node->nodeName == 'style' || $node->nodeName == 'textarea');
+    }
+
+    return true;
   }
 }
