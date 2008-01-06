@@ -16,7 +16,12 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$t = new lime_test(53, new lime_output_color());
+$t = new limeade_test(53, limeade_output::get());
+$limeade = new limeade_sf($t);
+$limeade->bootstrap();
+
+$luceneade = new limeade_lucene($limeade);
+$luceneade->configure();
 
 class Foo { }
 

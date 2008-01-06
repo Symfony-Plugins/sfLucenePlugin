@@ -15,14 +15,18 @@
   */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
-require dirname(__FILE__) . '/../../bin/AllFakeModels.php';
 
 class Foo { }
 class Bar { }
 
 class sfLuceneActionIndexer { }
 
-$t = new lime_test(14, new lime_output_color());
+$t = new limeade_test(14, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
+
+$luceneade = new limeade_lucene($limeade);
+$luceneade->configure()->clear_sandbox()->load_models();
 
 $search = sfLucene::getInstance('testLucene');
 $h = $search->getParameterHolder();

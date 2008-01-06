@@ -16,7 +16,9 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$t = new lime_test(6, new lime_output_color());
+$t = new limeade_test(6, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
 
 class FooListener
 {

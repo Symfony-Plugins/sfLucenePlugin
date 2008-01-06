@@ -15,7 +15,13 @@
   */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
-require dirname(__FILE__) . '/../../bin/AllFakeModels.php';
+
+$t = new limeade_test(64, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
+
+$luceneade = new limeade_lucene($limeade);
+$luceneade->configure()->clear_sandbox()->load_models();
 
 class Foo { }
 class Bar extends BaseObject { }
@@ -28,8 +34,6 @@ function getDoc($lucene, $guid)
 
   return $hits[0];
 }
-
-$t = new lime_test(64, new lime_output_color());
 
 $lucene = sfLucene::getInstance('testLucene', 'en');
 $model = new FakeForum;
@@ -284,7 +288,7 @@ $t->is($doc->sfl_categories_cache, serialize(explode(' ', $doc->sfl_category)), 
 
 $t->is($lucene->getCategories()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count');
 
-configure_i18n(true, 'en');
+$app->i18n()->setup('en');
 
 $indexer->delete();
 $indexer->insert();
@@ -296,7 +300,7 @@ $t->is($doc->sfl_categories_cache, serialize(explode(' ', $doc->sfl_category)), 
 
 $t->is($lucene->getCategories()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count with i18n on');
 
-configure_i18n(false);
+$app->i18n()->teardown();
 
 $h->set('categories', 'Forum');
 

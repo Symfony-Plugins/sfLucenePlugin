@@ -15,6 +15,7 @@
   */
 
 require dirname(__FILE__) . '/bootstrap/unit.php';
+require $sf_symfony_lib_dir . '/util/sfFinder.class.php';
 
 $h = new lime_harness(new lime_output_color());
 $h->base_dir = dirname(__FILE__);

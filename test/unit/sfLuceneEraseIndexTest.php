@@ -16,7 +16,12 @@
 
 require dirname(__FILE__) . '/../bootstrap/unit.php';
 
-$t = new lime_test(1, new lime_output_color());
+$t = new limeade_test(1, limeade_output::get());
+$limeade = new limeade_sf($t);
+$limeade->bootstrap();
+
+$luceneade = new limeade_lucene($limeade);
+$luceneade->configure()->clear_sandbox();
 
 $lucene = sfLucene::getInstance('testLucene','en');
 $stat = stat(sfConfig::get('sf_data_dir') . '/index/testLucene/en/segments.gen');

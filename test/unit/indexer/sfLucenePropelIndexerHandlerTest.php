@@ -15,7 +15,13 @@
   */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
-require dirname(__FILE__) . '/../../bin/AllFakeModels.php';
+
+$t = new limeade_test(3, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
+
+$luceneade = new limeade_lucene($limeade);
+$luceneade->configure()->clear_sandbox()->load_models();
 
 class FooIndexer extends sfLucenePropelIndexerHandler
 {
@@ -26,8 +32,6 @@ class FooIndexer extends sfLucenePropelIndexerHandler
     $this->rebuilds[] = $name;
   }
 }
-
-$t = new lime_test(3, new lime_output_color());
 
 $search = sfLucene::getInstance('testLucene', 'en');
 

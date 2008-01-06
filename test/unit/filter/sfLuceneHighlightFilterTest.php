@@ -16,7 +16,9 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$t = new lime_test(20, new lime_output_color());
+$t = new limeade_test(20, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
 
 $chain = new sfFilterChain();
 
@@ -156,10 +158,12 @@ $response->setContentType('text/html');
 
 $t->diag('testing i18n');
 
-configure_i18n();
+$i18n = $app->i18n()->setup('en_US');
 
 $response->setContent('<html><body>highlight the keyword</body></html>');
 $request->setParameter('h', 'keyword');
 $highlight->execute($chain);
 
 $t->is($response->getContent(), "<?xml version=\"1.0\"?>\n<html><body>highlight the <highlighted>keyword</highlighted></body></html>\n", 'highlighter highlights a single keyword with i18n');
+
+$i18n->teardown();

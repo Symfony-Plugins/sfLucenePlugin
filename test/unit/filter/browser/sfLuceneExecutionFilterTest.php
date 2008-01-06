@@ -16,7 +16,9 @@
 
 require dirname(__FILE__) . '/../../../bootstrap/unit.php';
 
-$t = new lime_test(5, new lime_output_color());
+$t = new limeade_test(5, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
 
 class FooFilter extends sfLuceneExecutionFilter
 {
@@ -38,10 +40,11 @@ $filter = new FooFilter($context);
 $chain = new sfFilterChain;
 
 try {
+  $ex = $t->no_exception('->execute() runs without exception');
   $filter->execute($chain);
-  $t->pass('->execute() runs without an exception');
+  $ex->no();
 } catch (Exception $e) {
-  $t->fail('->execute() runs without an exception');
+  $ex->caught($e);
 }
 
 $t->todo('->executeView() sets decorator to false');

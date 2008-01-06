@@ -16,6 +16,6 @@
 
 require dirname(__FILE__) . '/../../../bootstrap/unit.php';
 
-$t = new lime_test(1, new lime_output_color());
+$t = new limeade_test(1, limeade_output::get());
 
 $t->todo('Implementation');

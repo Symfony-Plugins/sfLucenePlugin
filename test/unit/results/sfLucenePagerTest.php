@@ -16,9 +16,14 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$lucene = sfLucene::getInstance('testLucene', 'en');
+$t = new limeade_test(30, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
 
-$t = new lime_test(30, new lime_output_color());
+$luceneade = new limeade_lucene($limeade);
+$luceneade->configure()->clear_sandbox();
+
+$lucene = sfLucene::getInstance('testLucene', 'en');
 
 $t->diag('testing constructor');
 

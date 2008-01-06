@@ -16,6 +16,10 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
+$t = new limeade_test(16, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
+
 sfLuceneToolkit::loadZend();
 
 sfLoader::loadHelpers(array('sfLucene'));
@@ -48,8 +52,6 @@ class Bar
 
 $foo = new Foo;
 $bar = new Bar;
-
-$t = new lime_test(16, new lime_output_color());
 
 $t->diag('testing partial dependencies');
 

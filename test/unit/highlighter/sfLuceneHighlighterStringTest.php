@@ -16,7 +16,9 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$t = new lime_test(8, new lime_output_color());
+$t = new limeade_test(8, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
 
 $keywords = array(new sfLuceneHighlighterKeywordNamed(new sfLuceneHighlighterMarkerUppercase, 'foobar'), new sfLuceneHighlighterKeywordNamed(new sfLuceneHighlighterMarkerSprint('"%s"'), 'foobarbaz'));
 

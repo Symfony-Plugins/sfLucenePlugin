@@ -16,11 +16,16 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$t = new lime_test(2, new lime_output_color());
+$t = new limeade_test(2, limeade_output::get());
+$limeade = new limeade_sf($t);
+$app = $limeade->bootstrap();
+
+$luceneade = new limeade_lucene($limeade);
+$luceneade->configure()->clear_sandbox()->load_models();
 
 $config = new sfLuceneProjectConfigHandler();
 
-$response = $config->execute(array(DATA_DIR . '/configTest/project.yml'));
+$response = $config->execute(array($luceneade->data_dir . '/configTest/project.yml'));
 
 file_put_contents(lime_test::get_temp_directory() . '/search.yml.php', $response);
 require lime_test::get_temp_directory() . '/search.yml.php';
