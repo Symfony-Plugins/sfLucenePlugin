@@ -16,7 +16,7 @@
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 
-$t = new limeade_test(26, limeade_output::get());
+$t = new limeade_test(30, limeade_output::get());
 $limeade = new limeade_sf($t);
 $app = $limeade->bootstrap();
 
@@ -54,6 +54,12 @@ class MockBehavior extends sfLucenePropelBehavior
   public function _getSearchInstances($node)
   {
     return $this->getSearchInstances($node);
+  }
+
+  public function clear()
+  {
+    $this->saveQueue = array();
+    $this->deleteQueue = array();
   }
 }
 
@@ -152,6 +158,38 @@ $behavior->postDelete($m1);
 $search->commit();
 $t->is($search->numDocs(), 0, '->postDelete() deletes the model from the index if it exists in the queue');
 $t->is($behavior->_getDeleteQueue(), array(1 => $m2), '->postDelete() removes deleting model from the queue');
+
+$t->diag('testing ::setLock()');
+
+$behavior->clear();
+
+sfLucenePropelBehavior::setLock(true);
+
+$m1->setCoolness(4);
+
+$behavior->preSave($m1);
+$t->is(count($behavior->_getSaveQueue()), 0, '::setLock() disables the save queue');
+
+$behavior->preDelete($m1);
+$t->is(count($behavior->_getDeleteQueue()), 0, '::setLock() disables the delete queue');
+
+$behavior->clear();
+
+sfLucenePropelBehavior::setLock(false);
+
+$behavior->preSave($m1);
+$t->is(count($behavior->_getSaveQueue()), 1, '::setLock() enables the save queue');
+
+$behavior->preDelete($m1);
+$t->is(count($behavior->_getDeleteQueue()), 1, '::setLock() enables the delete queue');
+
+$behavior->clear();
+
+foreach (array($m1, $m2, $m3, $m3) as $m)
+{
+  $indexer = new sfLucenePropelIndexer(sfLucene::getInstance('testLucene', 'en'), $m);
+  $indexer->delete();
+}
 
 $t->diag('testing ->insertIndex()');
 
