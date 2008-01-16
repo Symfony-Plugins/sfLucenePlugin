@@ -24,7 +24,27 @@ class sfLucene
   const VERSION = '0.2-DEV';
 
   /**
-   * Holds various misc. parameters
+   * Holds the internal dispatcher for this Lucene instance.
+   */
+  protected $dispatcher = null;
+
+  /**
+   * Holds the Lucene instance
+   */
+  protected $lucene = null;
+
+  /**
+   * Holds the indexer factory singleton
+   */
+  protected $indexerFactory = null;
+
+  /**
+   * Holds the categories singleton
+   */
+  protected $categoriesHarness = null;
+
+  /**
+   * Holds parameters for this lucene instance
    */
   protected $parameters = null;
 
@@ -51,7 +71,7 @@ class sfLucene
 
     $this->setParameter('index_location', sfConfig::get('sf_data_dir') . DIRECTORY_SEPARATOR.'index'.DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . $culture);
 
-    $this->setParameter('event_dispatcher', new sfEventDispatcher);
+    $this->dispatcher = new sfEventDispatcher;
 
     $this->initialize();
 
@@ -228,14 +248,14 @@ class sfLucene
   /**
   * Returns the categories for this index.
   */
-  public function getCategories()
+  public function getCategoriesHarness()
   {
-    if (!$this->getParameterHolder()->has('categories'))
+    if ($this->categoriesHarness == null)
     {
-      $this->setParameter('categories', new sfLuceneCategories($this));
+      $this->categoriesHarness = new sfLuceneCategories($this);
     }
 
-    return $this->getParameter('categories');
+    return $this->categoriesHarness;
   }
 
   /**
@@ -246,7 +266,7 @@ class sfLucene
   {
     $location = $this->getParameter('index_location');
 
-    if (!$this->getParameterHolder()->has('lucene'))
+    if ($this->lucene == null)
     {
       sfLuceneToolkit::loadZend();
 
@@ -273,24 +293,24 @@ class sfLucene
         $lucene = Zend_Search_Lucene::create( new sfLuceneDirectoryStorage($location) );
       }
 
-      $this->setParameter('lucene', $lucene);
+      $this->lucene = $lucene;
    }
 
-    return $this->getParameter('lucene');
+    return $this->lucene;
   }
 
   /**
   * Gets the specified indexer from the factory.
   * @return mixed An instance of the indexer factory.
   */
-  public function getIndexer()
+  public function getIndexerFactory()
   {
-    if (!$this->getParameterHolder()->has('indexer_factory'))
+    if ($this->indexerFactory == null)
     {
-      $this->setParameter('indexer_factory', new sfLuceneIndexerFactory($this));
+      $this->indexerFactory = new sfLuceneIndexerFactory($this);
     }
 
-    return $this->getParameter('indexer_factory');
+    return $this->indexerFactory;
   }
 
   /**
@@ -298,12 +318,12 @@ class sfLucene
    */
   public function getEventDispatcher()
   {
-    return $this->getParameter('event_dispatcher');
+    return $this->dispatcher;
   }
 
   /**
   * Gets the context.  Right now, this exists for forward-compatability.
-  * TODO: Remove singleton
+  * TODO: Remove singleton (depends on sfConfiguration)
   */
   public function getContext()
   {
@@ -375,12 +395,12 @@ class sfLucene
 
     $this->getEventDispatcher()->notify(new sfEvent($this, 'lucene.log', array('Rebuilding index...')));
 
-    $this->getCategories()->clear()->save();
+    $this->getCategoriesHarness()->clear()->save();
 
     $original = $this->getParameter('delete_lock', false);
     $this->setParameter('delete_lock', true); // tells the indexers not to bother deleting
 
-    foreach ($this->getIndexer()->getHandlers() as $handler)
+    foreach ($this->getIndexerFactory()->getHandlers() as $handler)
     {
       $handler->rebuild();
     }
@@ -589,7 +609,7 @@ class sfLucene
   */
   public function friendlyFind($query)
   {
-    return new sfLuceneResults( $this->find($query), $this);
+    return new sfLuceneResults($this->find($query), $this);
   }
 
   /**
@@ -614,5 +634,23 @@ class sfLucene
   public function unlatch()
   {
     unset(self::$instances[$this->getParameter('name')][$this->getParameter('culture')]);
+  }
+
+  /**
+   * Force the index to use a Lucene instance.  Do not ever use except for unit
+   * testing.
+   */
+  public function forceLucene($lucene)
+  {
+    $this->lucene = $lucene;
+  }
+
+  /**
+   * Force the index to use a indexer factory.  Do not ever use except for unit
+   * testing.
+   */
+  public function forceIndexerFactory($factory)
+  {
+    $this->indexerFactory = $factory;
   }
 }

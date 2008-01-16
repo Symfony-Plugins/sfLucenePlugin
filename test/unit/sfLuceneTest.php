@@ -166,14 +166,14 @@ try {
 
 $cswap->restore();
 
-$t->diag('testing ->getCategories()');
-$cats = $lucene->getCategories();
+$t->diag('testing ->getCategoriesHarness()');
+$cats = $lucene->getCategoriesHarness();
 
 $t->isa_ok($cats, 'sfLuceneCategories', '->getCategories() returns an instance of sfLuceneCategories');
-$t->ok($lucene->getCategories() === $cats, '->getCategories() is a singleton');
+$t->ok($lucene->getCategoriesHarness() === $cats, '->getCategories() is a singleton');
 
-$t->diag('testing ->getIndexer()');
-$indexer = $lucene->getIndexer();
+$t->diag('testing ->getIndexerFactory()');
+$indexer = $lucene->getIndexerFactory();
 $t->isa_ok($indexer, 'sfLuceneIndexerFactory', '->getIndexer() returns an instance of sfLuceneIndexerFactory');
 
 $t->diag('testing ->getContext()');
@@ -235,8 +235,8 @@ class MockScoring extends Zend_Search_Lucene_Search_Similarity_Default {}
 
 $mock = new MockLucene;
 
-$originalLucene = $lucene->getParameter('lucene');
-$lucene->setParameter('lucene', $mock);
+$originalLucene = $lucene->getLucene();
+$lucene->forceLucene($mock);
 
 $t->is($lucene->find('foo'), range(1, 100), '->find() returns what ZSL returns');
 $t->ok(sfLuceneCriteria::newInstance($lucene)->add('foo')->getQuery() == $mock->args[0], '->find() parses string queries');
@@ -276,7 +276,7 @@ try {
   $t->isa_ok(Zend_Search_Lucene_Search_Similarity::getDefault(), 'Zend_Search_Lucene_Search_Similarity_Default', 'if ZSL throws exception, ->find() stills resets the scoring algorithm');
 }
 
-$lucene->setParameter('lucene', $originalLucene);
+$lucene->forceLucene($originalLucene);
 
 $t->diag('testing ->rebuildIndex()');
 
@@ -310,20 +310,20 @@ class MockIndexerHandler
 $handlers = array(new MockIndexerHandler, new MockIndexerHandler);
 $factory = new MockIndexerFactory($handlers, $lucene);
 
-$originalFactory = $lucene->getParameter('indexer_factory');
-$lucene->setParameter('indexer_factory', $factory);
+$originalFactory = $lucene->getIndexerFactory();
+$lucene->forceIndexerFactory($factory);
 
-$lucene->getCategories()->getCategory('foo');
-$lucene->getCategories()->save();
+$lucene->getCategoriesHarness()->getCategory('foo');
+$lucene->getCategoriesHarness()->save();
 
 $lucene->rebuildIndex();
 
 $t->is($factory->deleteLock, true, '->rebuildIndex() enables the delete lock');
 $t->ok($handlers[0]->count == 1 && $handlers[0]->count == 1, '->rebuildIndex() calls each handler\'s ->rebuild() only once');
 
-$t->is($lucene->getCategories()->getAllCategories(), array(), '->rebuildIndex() clears the category list');
+$t->is($lucene->getCategoriesHarness()->getAllCategories(), array(), '->rebuildIndex() clears the category list');
 
-$lucene->setParameter('indexer_factory', $originalFactory);
+$lucene->forceIndexerFactory($originalFactory);
 
 $t->diag('testing wrappers');
 

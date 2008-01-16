@@ -286,7 +286,7 @@ $doc = getDoc($lucene, $indexer->getModelGuid());
 $t->is($doc->sfl_category, 'Forum', '->insert() configures categories correctly');
 $t->is($doc->sfl_categories_cache, serialize(explode(' ', $doc->sfl_category)), '->insert() configures categories cache correctly');
 
-$t->is($lucene->getCategories()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count');
+$t->is($lucene->getCategoriesHarness()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count');
 
 $app->i18n()->setup('en');
 
@@ -298,7 +298,7 @@ $doc = getDoc($lucene, $indexer->getModelGuid());
 $t->is($doc->sfl_category, 'Forum', '->insert() configures categories correctly with i18n on');
 $t->is($doc->sfl_categories_cache, serialize(explode(' ', $doc->sfl_category)), '->insert() configures categories cache correctly with i18n on');
 
-$t->is($lucene->getCategories()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count with i18n on');
+$t->is($lucene->getCategoriesHarness()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count with i18n on');
 
 $app->i18n()->teardown();
 
@@ -312,7 +312,7 @@ $doc = getDoc($lucene, $indexer->getModelGuid());
 $t->is($doc->sfl_category, 'Forum', '->insert() configures categories correctly if just a string');
 $t->is($doc->sfl_categories_cache, serialize(explode(' ', $doc->sfl_category)), '->insert() configures categories cache correctly if just a string');
 
-$t->is($lucene->getCategories()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count if just a string');
+$t->is($lucene->getCategoriesHarness()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count if just a string');
 
 $h->set('categories', array('Forum', '%title%'));
 
@@ -326,8 +326,8 @@ $doc = getDoc($lucene, $indexer->getModelGuid());
 $t->is($doc->sfl_category, 'Forum foobar', '->insert() configures categories correctly with a callback');
 $t->is($doc->sfl_categories_cache, serialize(array('Forum','foobar')), '->insert() configures categories cache correctly with a callback');
 
-$t->is($lucene->getCategories()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count for first category');
-$t->is($lucene->getCategories()->getCategory('foobar')->getCount(), 1, '->insert() updated category database count for second category');
+$t->is($lucene->getCategoriesHarness()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count for first category');
+$t->is($lucene->getCategoriesHarness()->getCategory('foobar')->getCount(), 1, '->insert() updated category database count for second category');
 
 $indexer->delete();
 
@@ -359,8 +359,8 @@ $doc = getDoc($lucene, $indexer->getModelGuid());
 $t->is($doc->sfl_category, 'Forum Strings!', '->insert() configures categories correctly with a object-returning callback');
 $t->is($doc->sfl_categories_cache, serialize(array('Forum','Strings!')), '->insert() configures categories cache correctly with a object-returning callback');
 
-$t->is($lucene->getCategories()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count for first category with object-returning callback');
-$t->is($lucene->getCategories()->getCategory('Strings!')->getCount(), 1, '->insert() updated category database count for second category with object-returning callback');
+$t->is($lucene->getCategoriesHarness()->getCategory('Forum')->getCount(), 1, '->insert() updated category database count for first category with object-returning callback');
+$t->is($lucene->getCategoriesHarness()->getCategory('Strings!')->getCount(), 1, '->insert() updated category database count for second category with object-returning callback');
 
 $h->remove('categories');
 
@@ -391,23 +391,23 @@ $lucene->commit();
 
 $t->is($lucene->numDocs(), 0, '->delete() deletes all matching documents in the index');
 
-$lucene->getCategories()->getCategory('Cat1')->add(5);
+$lucene->getCategoriesHarness()->getCategory('Cat1')->add(5);
 
 $h->set('categories', array('Cat1'));
 $indexer->insert();
 $lucene->commit();
-$count = $lucene->getCategories()->getCategory('Cat1')->getCount();
+$count = $lucene->getCategoriesHarness()->getCategory('Cat1')->getCount();
 $indexer->delete();
 
-$t->is($lucene->getCategories()->getCategory('Cat1')->getCount(), $count - 1, '->delete() updates the category database count');
+$t->is($lucene->getCategoriesHarness()->getCategory('Cat1')->getCount(), $count - 1, '->delete() updates the category database count');
 
 $indexer->insert();
-$count = $lucene->getCategories()->getCategory('Cat1')->getCount();
+$count = $lucene->getCategoriesHarness()->getCategory('Cat1')->getCount();
 $h->set('categories', array('Cat2'));
 $indexer->delete();
 
-$t->is($lucene->getCategories()->getCategory('Cat1')->getCount(), $count - 1, '->delete() updates category count that it was indexed with if categories have changed');
-$t->is($lucene->getCategories()->getCategory('Cat2')->getCount(), 0, '->delete() does not update new category count if categories have changed');
+$t->is($lucene->getCategoriesHarness()->getCategory('Cat1')->getCount(), $count - 1, '->delete() updates category count that it was indexed with if categories have changed');
+$t->is($lucene->getCategoriesHarness()->getCategory('Cat2')->getCount(), 0, '->delete() does not update new category count if categories have changed');
 
 $t->diag('testing ->save()');
 

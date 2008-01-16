@@ -140,7 +140,7 @@ class sfLucenePropelBehavior
   {
     foreach ($this->getSearchInstances($node) as $instance)
     {
-      $instance->getIndexer()->getModel($node)->delete();
+      $instance->getIndexerFactory()->getModel($node)->delete();
     }
   }
 
@@ -151,7 +151,7 @@ class sfLucenePropelBehavior
   {
     foreach ($this->getSearchInstances($node) as $instance)
     {
-      $instance->getIndexer()->getModel($node)->insert();
+      $instance->getIndexerFactory()->getModel($node)->insert();
     }
   }
 
