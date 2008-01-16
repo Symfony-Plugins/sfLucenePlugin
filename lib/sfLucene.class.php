@@ -395,7 +395,7 @@ class sfLucene
 
     $this->getEventDispatcher()->notify(new sfEvent($this, 'lucene.log', array('Rebuilding index...')));
 
-    $this->getCategoriesHarness()->clear()->save();
+    $this->getCategoriesHarness()->clear();
 
     $original = $this->getParameter('delete_lock', false);
     $this->setParameter('delete_lock', true); // tells the indexers not to bother deleting

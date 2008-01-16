@@ -59,6 +59,11 @@ class sfLuceneCategories
     $this->load();
   }
 
+  public function __destruct()
+  {
+    $this->save();
+  }
+
   /**
    * Returns an instance of the category object.  If it does not exist, it creates
    * an empty one.

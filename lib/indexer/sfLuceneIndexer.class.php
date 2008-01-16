@@ -135,7 +135,7 @@ abstract class sfLuceneIndexer
    */
   protected function addCategory($category, $c = 1)
   {
-    $this->getSearch()->getCategoriesHarness()->getCategory($category)->add($c)->getHolder()->save();
+    $this->getSearch()->getCategoriesHarness()->getCategory($category)->add($c);
   }
 
   /**
@@ -145,7 +145,7 @@ abstract class sfLuceneIndexer
    */
   protected function removeCategory($category, $c = 1)
   {
-    $this->getSearch()->getCategoriesHarness()->getCategory($category)->subtract($c)->getHolder()->save();
+    $this->getSearch()->getCategoriesHarness()->getCategory($category)->subtract($c);
   }
 
   /**
