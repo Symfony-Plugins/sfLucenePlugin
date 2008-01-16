@@ -45,9 +45,7 @@ EOF;
   {
     $app = $arguments['application'];
 
-    $version = file_get_contents(dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR .'VERSION');
-
-    $this->notifyListRow('Plugin Version', $version);
+    $this->notifyListRow('Plugin Version', 'sfLucene ' . sfLucene::VERSION);
 
     if ($app)
     {

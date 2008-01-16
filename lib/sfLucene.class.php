@@ -21,6 +21,8 @@
 */
 class sfLucene
 {
+  const VERSION = '0.2-DEV';
+
   /**
    * Holds various misc. parameters
    */
