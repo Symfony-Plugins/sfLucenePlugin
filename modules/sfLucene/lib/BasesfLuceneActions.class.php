@@ -199,7 +199,7 @@ abstract class BasesfLuceneActions extends sfActions
    */
   protected function configureCategories($form)
   {
-    $categories = $this->getLuceneInstance()->getCategories()->getAllCategories();
+    $categories = $this->getLuceneInstance()->getCategoriesHarness()->getAllCategories();
 
     if (!sfConfig::get('app_lucene_categories', true) || count($categories) == 0)
     {
