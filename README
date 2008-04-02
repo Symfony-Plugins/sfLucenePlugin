@@ -1,0 +1,35 @@
+= Introduction =
+sfLucene integrates Zend_Search_Lucene and sfSearch for an efficient but powerful search engine.
+
+Warning: This documentation is a work-in-progress and may be difficult to read. 
+
+= Requirements =
+  * symfony 1.1
+  * PHP 5.2
+
+= Dependencies =
+  * [[sfSearchPlugin]]
+
+= Installation =
+sfLucene is currently available from subversion only:
+{{{
+svn co http://svn.symfony-project.com/plugins/sfLucenePlugin/trunk plugins/sfLucenePlugin 
+}}}
+You will also need [[sfSearchPlugin]]:
+{{{
+svn co http://svn.symfony-project.com/plugins/sfSearchPlugin/trunk plugins/sfSearchPlugin
+}}}
+
+= Usage =
+To use sfLucene in sfSearch, configure the engine like so in your index:
+{{{
+protected function configure()
+{
+  // ...
+
+  $engine = new xfLuceneEngine(sfConfig::get('sf_data_dir') . '/index/MyIndex');
+  $engine->configure(xfLuceneEngine::ANALYZER_UTF8 | xfLuceneEngine::ANALYZER_NUMBER);
+  
+  $this->setEngine($engine);
+}
+}}}
