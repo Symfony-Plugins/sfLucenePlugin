@@ -12,8 +12,11 @@ require 'engine/xfEngine.interface.php';
 require 'engine/xfEngineException.class.php';
 require 'engine/xfLuceneEngine.class.php';
 require 'util/xfLuceneException.class.php';
-require 'criteria/xfCriterionRewriter.interface.php';
+require 'criteria/xfCriterionImplementer.interface.php';
+require 'criteria/xfLuceneCriterionImplementer.class.php';
 require 'criteria/xfLuceneCriterionRewriter.class.php';
+require 'criteria/xfCriterion.interface.php';
+require 'criteria/xfCriterionString.class.php';
 require 'document/xfDocument.class.php';
 require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
@@ -21,17 +24,22 @@ require 'vendor/Zend/Search/Lucene.php';
 
 define('LOCATION', dirname(__file__) . '/../../sandbox/index');
 
-mkdir(LOCATION, 0777, true);
-
-// clear the old index first
-foreach (new DirectoryIterator(LOCATION) as $file)
+if (is_dir(LOCATION))
 {
-  if ($file->isDot())
+  // clear the old index first
+  foreach (new DirectoryIterator(LOCATION) as $file)
   {
-    continue;
+    if ($file->isDot())
+    {
+      continue;
+    }
+
+    unlink($file->getRealpath());
   }
-  
-  unlink($file->getRealpath());
+}
+else
+{
+  mkdir(LOCATION, 0777, true);
 }
 
 $t = new lime_test(59, new lime_output_color);

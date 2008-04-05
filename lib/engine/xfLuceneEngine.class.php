@@ -51,13 +51,6 @@ final class xfLuceneEngine implements xfEngine
   private $location;
 
   /**
-   * The criterion rewriter.
-   *
-   * @var xfLuceneCriterionRewriter
-   */
-  private $rewriter;
-
-  /**
    * The analyzer
    *
    * @var Zend_Search_Lucene_Analsysi_Analyzer
@@ -72,7 +65,6 @@ final class xfLuceneEngine implements xfEngine
   public function __construct($location)
   {
     $this->location = $location;
-    $this->rewriter = new xfLuceneCriterionRewriter;
     $this->analyzer = new Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8Num_CaseInsensitive;
 
     Zend_Search_Lucene_Storage_Directory_Filesystem::setDefaultFilePermissions(0777);
@@ -225,11 +217,10 @@ final class xfLuceneEngine implements xfEngine
    */
   public function find(xfCriterion $query)
   {
-    $query = $query->rewrite($this->rewriter);
-    $hits  = $this->getIndex()->find($query);
-    $hits  = new xfLuceneHits($hits, $this);
+    $zquery = xfLuceneCriterionRewriter::rewrite($query);
+    $hits = $this->getIndex()->find($zquery);
 
-    return $hits;
+    return new xfLuceneHits($this, $hits, $query, $zquery);
   }
 
   /**
@@ -250,7 +241,7 @@ final class xfLuceneEngine implements xfEngine
     }
     else
     {
-      throw new xfEngineException('Guid "' . $guid . '" could not be found in Zend_Search_Lucene index');
+      throw new xfEngineException('GUID "' . $guid . '" could not be found in Zend_Search_Lucene index');
     }
   }
 

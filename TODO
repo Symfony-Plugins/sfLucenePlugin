@@ -1,0 +1,2 @@
+  * Write tokenizer Zend_Search_Lucene
+  * Improve xfLuceneEngine to allow full power of Zend_Search_Lucene
