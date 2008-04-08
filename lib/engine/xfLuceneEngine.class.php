@@ -215,12 +215,14 @@ final class xfLuceneEngine implements xfEngine
   /**
    * @see xfEngine
    */
-  public function find(xfCriterion $query)
+  public function find(xfCriterion $criteria)
   {
-    $zquery = xfLuceneCriterionRewriter::rewrite($query);
+    $zquery = xfLuceneCriterionRewriter::rewrite($criteria);
     $hits = $this->getIndex()->find($zquery);
 
-    return new xfLuceneHits($this, $hits, $query, $zquery);
+    $implementer = new xfLuceneCriterionImplementer($criteria, $zquery);
+
+    return new xfLuceneHits($this, $hits, $implementer);
   }
 
   /**

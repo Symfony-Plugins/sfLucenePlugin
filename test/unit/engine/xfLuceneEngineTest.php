@@ -11,6 +11,7 @@ require dirname(__FILE__) . '/../../bootstrap/unit.php';
 require 'engine/xfEngine.interface.php';
 require 'engine/xfEngineException.class.php';
 require 'engine/xfLuceneEngine.class.php';
+require 'engine/xfLuceneHits.class.php';
 require 'util/xfLuceneException.class.php';
 require 'criteria/xfCriterionImplementer.interface.php';
 require 'criteria/xfLuceneCriterionImplementer.class.php';
@@ -20,6 +21,7 @@ require 'criteria/xfCriterionString.class.php';
 require 'document/xfDocument.class.php';
 require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
+require 'result/xfDocumentHit.class.php';
 require 'vendor/Zend/Search/Lucene.php';
 
 define('LOCATION', dirname(__file__) . '/../../sandbox/index');
@@ -42,7 +44,7 @@ else
   mkdir(LOCATION, 0777, true);
 }
 
-$t = new lime_test(59, new lime_output_color);
+$t = new lime_test(62, new lime_output_color);
 
 $engine = new xfLuceneEngine(LOCATION);
 
@@ -194,6 +196,11 @@ try {
 }
 
 $t->diag('->find()');
+$c = new xfCriterionString('carl');
+$hits = $engine->find($c);
+$t->isa_ok($hits, 'xfLuceneHits', '->find() returns a xfLuceneHits');
+$t->is($hits->count(), 1, '->find() rewrites query into something it can understand');
+$t->isa_ok($hits->current()->getCriterionImplementer(), 'xfLuceneCriterionImplementer', '->find() binds results to the xfLuceneCriterionImplementer');
 
 $t->diag('->optimize()');
 try {
