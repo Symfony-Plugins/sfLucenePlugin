@@ -1,4 +1,11 @@
 <?php
+/**
+ * This file is part of the sfLucene package.
+ * (c) Carl Vondrick <carl.vondrick@symfony-project.com>
+ *
+ * For the full copyright and license information, please view the LICENSE
+ * file that was distributed with this source code.
+ */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 require 'engine/xfLuceneHits.class.php';
@@ -12,7 +19,6 @@ require 'result/xfDocumentHit.class.php';
 require 'document/xfDocument.class.php';
 require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
-require 'vendor/Zend/Search/Lucene.php';
 
 $t = new lime_test(13, new lime_output_color);
 

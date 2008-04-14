@@ -7,6 +7,10 @@
  * file that was distributed with this source code.
  */
 
+// this is an ugly hack, but there's a bug somewhere with sfSimpleAutoload,
+// Zend_Search_Lucene, and PHP.
+require_once 'Zend/Search/Lucene.php';
+
 /**
  * The Zend_Search_Lucene backend engine.
  *
@@ -37,6 +41,16 @@ final class xfLuceneEngine implements xfEngine
   const ANALYZER_CASE_SENSITIVE = 8;
 
   /**
+   * The sfLucene version
+   */
+  const VERSION = '0.5-DEV';
+
+  /**
+   * The Zend_Search_Lucene version
+   */
+  const LUCENE_VERSION = '1.5';
+
+  /**
    * The Lucene index.
    *
    * @var Zend_Search_Lucene_Interface
@@ -53,7 +67,7 @@ final class xfLuceneEngine implements xfEngine
   /**
    * The analyzer
    *
-   * @var Zend_Search_Lucene_Analsysi_Analyzer
+   * @var Zend_Search_Lucene_Analysis_Analyzer
    */
   private $analyzer;
 
@@ -192,7 +206,7 @@ final class xfLuceneEngine implements xfEngine
     {
       $this->index = Zend_Search_Lucene::create($this->location);
     }
-    else
+    elseif (is_dir($this->location))
     {
       foreach (new DirectoryIterator($this->location) as $file)
       {
@@ -383,6 +397,60 @@ final class xfLuceneEngine implements xfEngine
   {
     // we use ->numDocs() because ->count() counts deleted documents
     return $this->getIndex()->numDocs();
+  }
+
+  /**
+   * @see xfEngine
+   */
+  public function describe()
+  {
+    $this->open();
+
+    $aclass = get_class($this->analyzer);
+
+    if (substr($aclass, 0, 44) == 'Zend_Search_Lucene_Analysis_Analyzer_Common_')
+    {
+      $aclass = substr($aclass, 44);
+    }
+
+    return array(
+      'Engine' => 'sfLucene ' . self::VERSION,
+      'Implementation' => 'Zend_Search_Lucene ' . self::LUCENE_VERSION,
+      'Location' => $this->location,
+      'Total Documents' => $this->count(),
+      'Total Segments' => $this->getSegmentCount(),
+      'Total Size' => round($this->getByteSize() / 1024 / 1024, 3) . ' MB',
+      'Analyzer' => $aclass
+    );
+  }
+
+  /**
+   * Gets the byte size of the index.
+   *
+   * @returns int The size in bytes
+   */
+  public function getByteSize()
+  {
+    $size = 0;
+    foreach (new DirectoryIterator($this->location) as $node)
+    {
+      if (!in_array($node->getFilename(), array('CVS', '.svn', '_svn')))
+      {
+        $size += $node->getSize();
+      }
+    }
+
+    return $size;
+  }
+
+  /**
+   * Gets the number of segments
+   *
+   * @returns int
+   */
+  public function getSegmentCount()
+  {
+    return count(glob($this->location . DIRECTORY_SEPARATOR . '_*.cfs'));
   }
 
   /**

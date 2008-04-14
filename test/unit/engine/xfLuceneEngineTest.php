@@ -22,7 +22,6 @@ require 'document/xfDocument.class.php';
 require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
 require 'result/xfDocumentHit.class.php';
-require 'vendor/Zend/Search/Lucene.php';
 
 define('LOCATION', dirname(__file__) . '/../../sandbox/index');
 
@@ -44,7 +43,7 @@ else
   mkdir(LOCATION, 0777, true);
 }
 
-$t = new lime_test(62, new lime_output_color);
+$t = new lime_test(70, new lime_output_color);
 
 $engine = new xfLuceneEngine(LOCATION);
 
@@ -211,6 +210,22 @@ try {
 {
   $t->fail($msg);
 }
+
+$t->diag('->describe()');
+$i = $engine->describe();
+$t->is($i['Engine'], 'sfLucene 0.5-DEV', '->describe() has the correct engine version');
+$t->is($i['Implementation'], 'Zend_Search_Lucene 1.5', '->describe() has the correct Zend_Search_Lucene version');
+$t->is($i['Location'], LOCATION, '->describe() has the correct location');
+$t->is($i['Total Documents'], 4, '->describe() has the correct total number of documents');
+$t->is($i['Total Segments'], 1, '->describe() has the correct total number of segments');
+$t->is($i['Total Size'], '0.008 MB', '->describe() has the correct total total size');
+$t->is($i['Analyzer'], 'Text', '->describe() has the correct analyzer');
+class FooAnalyzer extends Zend_Search_Lucene_Analysis_Analyzer_Common_Text
+{
+}
+$engine->setAnalyzer(new FooAnalyzer);
+$i = $engine->describe();
+$t->is($i['Analyzer'], 'FooAnalyzer', '->describe() does not crop an external analyzer class name');
 
 $t->diag('->delete()');
 $engine->commit();
