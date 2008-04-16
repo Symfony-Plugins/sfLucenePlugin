@@ -100,7 +100,7 @@ $t->diag('->rewriteDocument()');
 $doc = new xfDocument('guid');
 $response = $engine->rewriteDocument($doc);
 $t->isa_ok($response, 'Zend_Search_Lucene_Document', '->rewriteDocument() creates a Zend_Search_Lucene_Document');
-$t->is($response->getFieldValue('_guid'), 'guid', '->rewriteDocument() writes the GUID correctly');
+$t->is($response->getFieldValue('__guid'), 'guid', '->rewriteDocument() writes the GUID correctly');
 $fields = array(
   xfField::STORED => 'isStored',
   xfField::INDEXED => 'isIndexed',
@@ -130,13 +130,13 @@ $t->is($field->encoding, 'ascii', '->rewriteDocument() rewrites the encoding');
 $t->is($field->boost, 4, '->rewriteDocument() rewrites the boost');
 $child = new xfDocument('child');
 $doc->addChild($child);
-$t->is($engine->rewriteDocument($doc)->getField('_sub_documents')->value, serialize(array('child')), '->rewriteDocument() caches child GUID');
+$t->is($engine->rewriteDocument($doc)->getField('__sub_documents')->value, serialize(array('child')), '->rewriteDocument() caches child GUID');
 
 $t->diag('->unwriteDocument()');
 $doc = new Zend_Search_Lucene_Document;
-$doc->addField(Zend_Search_Lucene_Field::Keyword('_guid', 'guid'));
-$doc->addField(Zend_Search_Lucene_Field::UnIndexed('_boosts', serialize(array())));
-$doc->addField(Zend_Search_Lucene_Field::UnIndexed('_sub_documents', serialize(array())));
+$doc->addField(Zend_Search_Lucene_Field::Keyword('__guid', 'guid'));
+$doc->addField(Zend_Search_Lucene_Field::UnIndexed('__boosts', serialize(array())));
+$doc->addField(Zend_Search_Lucene_Field::UnIndexed('__sub_documents', serialize(array())));
 $response = $engine->unwriteDocument($doc);
 $t->isa_ok($response, 'xfDocument', '->unwriteDocument() returns an xfDocument');
 $t->is($response->getGuid(), 'guid', '->unwriteDocument() unwrites the GUID');
@@ -152,7 +152,7 @@ foreach ($fields as $property => $type)
   $field = new Zend_Search_Lucene_Field($name, 'bar', 'utf8', false, false, false, false);
   $field->$property = true;
   $doc->addField($field);
-  $doc->addField(Zend_Search_Lucene_Field::UnIndexed('_boosts', serialize(array('test' => 1))));
+  $doc->addField(Zend_Search_Lucene_Field::UnIndexed('__boosts', serialize(array('test' => 1))));
   $response = $engine->unwriteDocument($doc)->getField('test')->getField()->getType();
   $t->is($response, $type, '->unwriteDocument() can exclusively handle "' . $property . '"');
 }

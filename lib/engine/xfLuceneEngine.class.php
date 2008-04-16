@@ -246,7 +246,7 @@ final class xfLuceneEngine implements xfEngine
   {
     $index = $this->getIndex();
 
-    $term = new Zend_Search_Lucene_Index_Term($guid, '_guid');
+    $term = new Zend_Search_Lucene_Index_Term($guid, '__guid');
     $docs = $index->termDocs($term);
 
     if (count($docs))
@@ -282,13 +282,13 @@ final class xfLuceneEngine implements xfEngine
    */
   public function unwriteDocument(Zend_Search_Lucene_Document $zdoc)
   {
-    $doc = new xfDocument($zdoc->getFieldValue('_guid'));
+    $doc = new xfDocument($zdoc->getFieldValue('__guid'));
 
-    $boosts = unserialize($zdoc->getFieldValue('_boosts'));
+    $boosts = unserialize($zdoc->getFieldValue('__boosts'));
 
     foreach ($zdoc->getFieldNames() as $name)
     {
-      if (substr($name, 0, 1) == '_')
+      if (substr($name, 0, 2) == '__')
       {
         // internal field, deal with later
         continue;
@@ -322,7 +322,7 @@ final class xfLuceneEngine implements xfEngine
       $doc->addField($value);
     }
 
-    foreach (unserialize($zdoc->getFieldValue('_sub_documents')) as $guid)
+    foreach (unserialize($zdoc->getFieldValue('__sub_documents')) as $guid)
     {
       $doc->addChild($this->findGuid($guid));
     }
@@ -339,7 +339,7 @@ final class xfLuceneEngine implements xfEngine
   public function rewriteDocument(xfDocument $doc)
   {
     $zdoc = new Zend_Search_Lucene_Document;
-    $zdoc->addField(Zend_Search_Lucene_Field::Keyword('_guid', $doc->getGuid()));
+    $zdoc->addField(Zend_Search_Lucene_Field::Keyword('__guid', $doc->getGuid()));
     $zdoc->boost = $doc->getBoost();
 
     $boosts = array();
@@ -369,8 +369,8 @@ final class xfLuceneEngine implements xfEngine
     {
       $childrenGuids[] = $child->getGuid();
     }
-    $zdoc->addField(Zend_Search_Lucene_Field::UnIndexed('_sub_documents', serialize($childrenGuids)));
-    $zdoc->addField(Zend_Search_Lucene_Field::UnIndexed('_boosts', serialize($boosts)));
+    $zdoc->addField(Zend_Search_Lucene_Field::UnIndexed('__sub_documents', serialize($childrenGuids)));
+    $zdoc->addField(Zend_Search_Lucene_Field::UnIndexed('__boosts', serialize($boosts)));
 
     return $zdoc;
   }
@@ -382,7 +382,7 @@ final class xfLuceneEngine implements xfEngine
   {
     $index = $this->getIndex();
 
-    $term = new Zend_Search_Lucene_Index_Term($guid, '_guid');
+    $term = new Zend_Search_Lucene_Index_Term($guid, '__guid');
 
     foreach ($index->termDocs($term) as $id)
     {
