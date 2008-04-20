@@ -19,6 +19,7 @@ require 'result/xfDocumentHit.class.php';
 require 'document/xfDocument.class.php';
 require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
+require 'addon/xfLuceneEnhancedFilesystem.class.php';
 
 $t = new lime_test(13, new lime_output_color);
 

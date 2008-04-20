@@ -169,13 +169,15 @@ final class xfLuceneEngine implements xfEngine
   {
     if (!$this->index)
     {
+      $fs = new xfLuceneEnhancedFilesystem($this->location);
+
       if (file_exists($this->location . '/segments.gen'))
       {
-        $this->index = Zend_Search_Lucene::open($this->location);
+        $this->index = Zend_Search_Lucene::open($fs);
       }
       else
       {
-        $this->index = Zend_Search_Lucene::create($this->location);
+        $this->index = Zend_Search_Lucene::create($fs);
       }
     }
   }
