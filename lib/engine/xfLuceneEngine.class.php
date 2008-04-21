@@ -7,6 +7,8 @@
  * file that was distributed with this source code.
  */
 
+set_include_path(realpath(dirname(__FILE__) . '/../vendor/') . PATH_SEPARATOR . get_include_path());
+
 // this is an ugly hack, but there's a bug somewhere with sfSimpleAutoload,
 // Zend_Search_Lucene, and PHP.
 require_once 'Zend/Search/Lucene.php';
