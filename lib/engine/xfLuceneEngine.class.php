@@ -23,26 +23,6 @@ require_once 'Zend/Search/Lucene.php';
 final class xfLuceneEngine implements xfEngine
 {
   /**
-   * Flag for UTF8 analyzer
-   */
-  const ANALYZER_UTF8 = 1;
-
-  /**
-   * Flag for text analyzer
-   */
-  const ANALYZER_TEXT = 2;
-
-  /**
-   * Flag for number analyzer
-   */
-  const ANALYZER_NUMBER = 4;
-
-  /**
-   * Flag for case sensitive analyzer
-   */
-  const ANALYZER_CASE_SENSITIVE = 8;
-
-  /**
    * The sfLucene version
    */
   const VERSION = '0.5-DEV';
@@ -83,41 +63,7 @@ final class xfLuceneEngine implements xfEngine
     $this->location = $location;
     $this->analyzer = new Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8Num_CaseInsensitive;
 
-    Zend_Search_Lucene_Storage_Directory_Filesystem::setDefaultFilePermissions(0777);
-  }
-
-  /**
-   * Configures according to flags
-   *
-   * @param int $flag
-   */
-  public function configure($flag)
-  {
-    if ($flag & self::ANALYZER_UTF8 || $flag & self::ANALYZER_TEXT)
-    {
-      // flag modifies analyzer
-      
-      if ($flag & self::ANALYZER_UTF8)
-      {
-        $class = 'Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8';
-      }
-      elseif ($flag & self::ANALYZER_TEXT)
-      {
-        $class = 'Zend_Search_Lucene_Analysis_Analyzer_Common_Text';
-      }
-
-      if ($flag & self::ANALYZER_NUMBER)
-      {
-        $class .= 'Num';
-      }
-
-      if (!($flag & self::ANALYZER_CASE_SENSITIVE))
-      {
-        $class .= '_CaseInsensitive';
-      }
-
-      $this->setAnalyzer(new $class);
-    }
+    Zend_Search_Lucene_Storage_Directory_Filesystem::setDefaultFilePermissions(0666);
   }
 
   /**
@@ -235,6 +181,8 @@ final class xfLuceneEngine implements xfEngine
    */
   public function find(xfCriterion $criteria)
   {
+    $this->bind();
+
     $zquery = xfLuceneCriterionRewriter::rewrite($criteria);
     $hits = $this->getIndex()->find($zquery);
 
@@ -411,20 +359,19 @@ final class xfLuceneEngine implements xfEngine
     $this->open();
 
     $aclass = get_class($this->analyzer);
-
     if (substr($aclass, 0, 44) == 'Zend_Search_Lucene_Analysis_Analyzer_Common_')
     {
       $aclass = substr($aclass, 44);
     }
 
     return array(
-      'Engine' => 'sfLucene ' . self::VERSION,
-      'Implementation' => 'Zend_Search_Lucene ' . self::LUCENE_VERSION,
-      'Location' => $this->location,
-      'Total Documents' => $this->count(),
-      'Total Segments' => $this->getSegmentCount(),
-      'Total Size' => round($this->getByteSize() / 1024 / 1024, 3) . ' MB',
-      'Analyzer' => $aclass
+      'Engine'            => 'sfLucene ' . self::VERSION,
+      'Implementation'    => 'Zend_Search_Lucene ' . self::LUCENE_VERSION,
+      'Location'          => $this->location,
+      'Total Documents'   => $this->count(),
+      'Total Segments'    => $this->getSegmentCount(),
+      'Total Size'        => round($this->getByteSize() / 1024 / 1024, 3) . ' MB',
+      'Analyzer'          => $aclass
     );
   }
 

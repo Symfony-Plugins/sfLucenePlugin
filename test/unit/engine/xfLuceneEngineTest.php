@@ -44,7 +44,7 @@ else
   mkdir(LOCATION, 0777, true);
 }
 
-$t = new lime_test(70, new lime_output_color);
+$t = new lime_test(67, new lime_output_color);
 
 $engine = new xfLuceneEngine(LOCATION);
 
@@ -70,20 +70,7 @@ $t->isa_ok($engine->getAnalyzer(), 'Zend_Search_Lucene_Analysis_Analyzer_Common_
 $engine->setAnalyzer(new Zend_Search_Lucene_Analysis_Analyzer_Common_Text);
 $t->isa_ok($engine->getAnalyzer(), 'Zend_Search_Lucene_Analysis_Analyzer_Common_Text', '->setAnalyzer() can change the analyzer');
 
-$t->diag('->configure()');
-$flags = array(
-  xfLuceneEngine::ANALYZER_UTF8 => 'Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8_CaseInsensitive',
-  xfLuceneEngine::ANALYZER_TEXT => 'Zend_Search_Lucene_Analysis_Analyzer_Common_Text_CaseInsensitive',
-  xfLuceneEngine::ANALYZER_TEXT | xfLuceneEngine::ANALYZER_CASE_SENSITIVE | xfLuceneEngine::ANALYZER_NUMBER => 'Zend_Search_Lucene_Analysis_Analyzer_Common_TextNum'
-);
-foreach ($flags as $flag => $class)
-{
-  $engine->configure($flag);
-  $t->isa_ok($engine->getAnalyzer(), $class ,'->configure() can create a "' . $class . '" analyzer');
-}
-
 $engine->setAnalyzer(new Zend_Search_Lucene_Analysis_Analyzer_Common_Text);
-$engine->configure(0);
 $t->isa_ok($engine->getAnalyzer(), 'Zend_Search_Lucene_Analysis_Analyzer_Common_Text', '->configure() does not change analyzer is no analyzer flag is present');
 
 $t->diag('->enableBatchMode(), ->enableInteractiveMode()');
