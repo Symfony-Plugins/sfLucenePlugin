@@ -240,38 +240,36 @@ final class xfLuceneEngine implements xfEngine
 
     foreach ($zdoc->getFieldNames() as $name)
     {
-      if (substr($name, 0, 2) == '__')
+      // ignore internal fields
+      if (substr($name, 0, 2) != '__')
       {
-        // internal field, deal with later
-        continue;
-      }
+        $zfield = $zdoc->getField($name);
 
-      $zfield = $zdoc->getField($name);
+        $type = 0;
 
-      $type = 0;
+        if ($zfield->isStored)
+        {
+          $type |= xfField::STORED;
+        }
+        if ($zfield->isIndexed)
+        {
+          $type |= xfField::INDEXED;
+        }
+        if ($zfield->isTokenized)
+        {
+          $type |= xfField::TOKENIZED;
+        }
+        if ($zfield->isBinary)
+        {
+          $type |= xfField::BINARY;
+        }
 
-      if ($zfield->isStored)
-      {
-        $type |= xfField::STORED;
-      }
-      if ($zfield->isIndexed)
-      {
-        $type |= xfField::INDEXED;
-      }
-      if ($zfield->isTokenized)
-      {
-        $type |= xfField::TOKENIZED;
-      }
-      if ($zfield->isBinary)
-      {
-        $type |= xfField::BINARY;
-      }
+        $field = new xfField($name, $type);
+        $field->setBoost($boosts[$name]);
 
-      $field = new xfField($name, $type);
-      $field->setBoost($boosts[$name]);
-
-      $value = new xfFieldValue($field, $zfield->value);
-      $doc->addField($value);
+        $value = new xfFieldValue($field, $zfield->value);
+        $doc->addField($value);
+      }
     }
 
     foreach (unserialize($zdoc->getFieldValue('__sub_documents')) as $guid)
