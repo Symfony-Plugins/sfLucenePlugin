@@ -7,6 +7,9 @@
  * file that was distributed with this source code.
  */
 
+// load Zend_Search_Lucene
+xfLuceneZendManager::load();
+
 /**
  * An convenience analyzer to provide a shortcut to setting up the analyzers.
  *

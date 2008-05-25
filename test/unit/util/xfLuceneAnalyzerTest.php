@@ -8,7 +8,7 @@
  */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
-require 'Zend/Search/Lucene.php';
+require 'util/xfLuceneZendManager.class.php';
 require 'util/xfLuceneAnalyzer.class.php';
 require 'stemmer/xfLuceneStemmer.interface.php';
 require 'stemmer/xfLuceneStemmerPorter.class.php';

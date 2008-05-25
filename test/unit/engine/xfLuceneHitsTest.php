@@ -8,6 +8,7 @@
  */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
+require 'util/xfLuceneZendManager.class.php';
 require 'engine/xfLuceneHits.class.php';
 require 'engine/xfEngine.interface.php';
 require 'engine/xfLuceneEngine.class.php';
