@@ -10,7 +10,7 @@
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
 require 'util/xfLuceneZendManager.class.php';
 
-$t = new lime_test(2, new lime_output_color);
+$t = new lime_test(3, new lime_output_color);
 
 function has()
 {
@@ -30,18 +30,21 @@ function has()
 function inpath()
 {
   $paths = explode(PATH_SEPARATOR, get_include_path());
+  $count = 0;
 
   foreach ($paths as $path)
   {
     if (false !== strpos($path, '/lib/vendor'))
     {
-      return true;
+      $count++;
     }
   }
   
-  return false;
+  return $count;
 }
 
 xfLuceneZendManager::load();
 $t->ok(has(), '::load() loads Zend_Search_Lucene');
-$t->ok(inpath(), '::load() configures the include path');
+$t->is(inpath(), 1, '::load() configures the include path');
+xfLuceneZendManager::load();
+$t->is(inpath(), 1, '::load() configures the include path only once');

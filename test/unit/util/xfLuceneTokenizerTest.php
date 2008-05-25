@@ -8,11 +8,12 @@
  */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
+require 'util/xfLuceneZendManager.class.php';
 require 'util/xfLuceneTokenizer.class.php';
 require 'util/xfLuceneException.class.php';
 require 'util/xfTokenInterface.interface.php';
 require 'util/xfToken.class.php';
-require 'Zend/Search/Lucene.php';
+xfLuceneZendManager::load();
 
 class TokenizerTester
 {

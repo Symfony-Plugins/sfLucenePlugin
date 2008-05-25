@@ -8,6 +8,7 @@
  */
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
+require 'util/xfLuceneZendManager.class.php';
 require 'criteria/xfCriterionImplementer.interface.php';
 require 'criteria/xfLuceneCriterionImplementer.class.php';
 require 'criteria/xfCriterion.interface.php';
@@ -15,7 +16,7 @@ require 'util/xfLuceneTokenizer.class.php';
 require 'util/xfTokenInterface.interface.php';
 require 'util/xfToken.class.php';
 require 'mock/criteria/xfMockCriterion.class.php';
-require 'vendor/Zend/Search/Lucene.php';
+xfLuceneZendManager::load();
 
 $t = new lime_test(4, new lime_output_color);
 

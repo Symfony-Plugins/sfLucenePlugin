@@ -35,6 +35,8 @@ final class xfLuceneZendManager
       // this is an ugly hack, but there's a bug somewhere with sfSimpleAutoload,
       // Zend_Search_Lucene, and PHP.
       require_once 'Zend/Search/Lucene.php';
+
+      self::$loaded = true;
     }
   }
 }

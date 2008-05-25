@@ -9,6 +9,7 @@
 
 
 require dirname(__FILE__) . '/../../bootstrap/unit.php';
+require 'util/xfLuceneZendManager.class.php';
 require 'criteria/xfLuceneCriterionRewriter.class.php';
 require 'criteria/xfCriterion.interface.php';
 require 'criteria/xfCriteria.class.php';
@@ -16,7 +17,7 @@ require 'criteria/xfCriteriaOperator.class.php';
 require 'criteria/xfCriterionString.class.php';
 require 'criteria/xfCriterionField.class.php';
 require 'util/xfLuceneException.class.php';
-require 'vendor/Zend/Search/Lucene.php';
+xfLuceneZendManager::load();
 
 $t = new lime_test(13, new lime_output_color);
 
