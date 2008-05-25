@@ -14,7 +14,7 @@ require 'stemmer/xfLuceneStemmer.interface.php';
 require 'stemmer/xfLuceneStemmerPorter.class.php';
 require 'vendor/PorterStemmer/PorterStemmer.class.php';
 
-$t = new lime_test(3, new lime_output_color);
+$t = new lime_test(2, new lime_output_color);
 
 $s = new xfLuceneStemmerPorter;
 $filter = new xfLuceneStemmerTokenFilter($s);
@@ -26,4 +26,3 @@ $response = $filter->normalize($token);
 
 $t->isa_ok($response, 'Zend_Search_Lucene_Analysis_Token', '->normalize() returns a Zend_Search_Lucene_Analysis_Token');
 $t->is($response->getTermText(), 'nation', '->normalize() consults the stemmer');
-$t->is($response->getEndOffset(), 16, '->normalize() adjusts the end offset');

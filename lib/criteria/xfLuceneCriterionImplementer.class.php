@@ -31,6 +31,13 @@ final class xfLuceneCriterionImplementer implements xfCriterionImplementer
   private $concrete;
 
   /**
+   * The tokenizer
+   *
+   * @var xfLuceneTokenizer
+   */
+  private $tokenizer;
+
+  /**
    * Constructor to set initial criterion.
    *
    * @param xfCriterion $abstract The abstract criterion
@@ -41,6 +48,8 @@ final class xfLuceneCriterionImplementer implements xfCriterionImplementer
   {
     $this->abstract = $abstract;
     $this->concrete = $concrete;
+
+    $this->tokenizer = new xfLuceneTokenizer($this->concrete);
   }
 
   /**
@@ -66,6 +75,6 @@ final class xfLuceneCriterionImplementer implements xfCriterionImplementer
    */
   public function tokenize($input)
   {
-    return array();
+    return $this->tokenizer->tokenize($input);
   }
 }

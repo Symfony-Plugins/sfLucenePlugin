@@ -43,7 +43,8 @@ final class xfLuceneStemmerTokenFilter extends Zend_Search_Lucene_Analysis_Token
     $newToken = new Zend_Search_Lucene_Analysis_Token(
                                   $text,
                                   $srcToken->getStartOffset(),
-                                  $srcToken->getStartOffset() + strlen($text));
+                                  //$srcToken->getStartOffset() + strlen($text));
+                                  $srcToken->getEndOffset());
 
     $newToken->setPositionIncrement($srcToken->getPositionIncrement());
 

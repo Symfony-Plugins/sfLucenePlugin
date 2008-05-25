@@ -23,6 +23,7 @@ require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
 require 'result/xfDocumentHit.class.php';
 require 'addon/xfLuceneEnhancedFilesystem.class.php';
+require 'util/xfLuceneTokenizer.class.php';
 
 define('LOCATION', dirname(__file__) . '/../../sandbox/index');
 
