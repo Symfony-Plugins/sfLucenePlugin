@@ -1,35 +1,127 @@
 = Introduction =
-sfLucene integrates Zend_Search_Lucene and sfSearch for an efficient but powerful search engine.
-
-Warning: This documentation is a work-in-progress and may be difficult to read. 
+sfLucene integrates Zend_Search_Lucene and [wiki:sfSearchPlugin sfSearch] to create a backend engine.
 
 = Requirements =
-  * symfony 1.1
-  * PHP 5.2
+  * [wiki:sfSearchPlugin]
 
-= Dependencies =
-  * [[sfSearchPlugin]]
+= Supports =
+  * [wiki:sfHighlightPlugin] (partially)
+
+= Features =
+  * Stemming for English
+  * Fully unit tested
 
 = Installation =
 sfLucene is currently available from subversion only:
 {{{
 svn co http://svn.symfony-project.com/plugins/sfLucenePlugin/trunk plugins/sfLucenePlugin 
 }}}
-You will also need [[sfSearchPlugin]]:
+You will also need [wiki:sfSearchPlugin]:
 {{{
 svn co http://svn.symfony-project.com/plugins/sfSearchPlugin/trunk plugins/sfSearchPlugin
 }}}
 
-= Usage =
-To use sfLucene in sfSearch, configure the engine like so in your index:
-{{{
-protected function configure()
-{
-  // ...
+= Setup =
+Configuring sfLucene to work with sfSearch is very simple.  All we must do is set the engine:
 
-  $engine = new xfLuceneEngine(sfConfig::get('sf_data_dir') . '/index/MyIndex');
-  $engine->configure(xfLuceneEngine::ANALYZER_UTF8 | xfLuceneEngine::ANALYZER_NUMBER);
-  
-  $this->setEngine($engine);
+{{{
+#!php
+<?php
+class MySearchIndex extends xfIndexSingle
+{
+  protected function configure()
+  {
+    // service registry setup here
+
+    $engine = new xfLuceneEngine(sfConfig::get('sf_data_dir') . '/index/MyIndex');
+    $this->setEngine($engine);
+  }
 }
+}}}
+
+As you can see, the constructor to xfLuceneEngine takes a path to where the index should be stored.
+
+At this point, you can begin populating your index and searching. But, there are more configuration options if you desire.
+
+== Analyzers ==
+An analyzer looks at your index and determines how to index and match text.  For example, some analyzers can only handle ASCII text, some ignore numbers, and some are case sensitive.
+
+You can specify an analyzer to use with the engine with the {{{ ->setAnalyzer() }}} method.  By default, sfLucene uses an analyzer that supports:
+  * UTF8 text
+  * Numbers
+  * Case insensitive
+
+=== Zend_Search_Lucene Analyzers ===
+Zend_Search_Lucene provides many more analyzers. If you are not indexing accented text, you can save performance by using a plain ASCII analyzer.  Zend_Search_Lucene provides the following analyzers:
+|| '''Anayzer'''                                                            || '''UTF8?''' || '''Numbers?''' || '''Case Sensitive?''' || '''Stemming?''' ||
+|| Zend_Search_Lucene_Analysis_Analyzer_Common_Text                         || No          || No             || Yes                   || No              ||
+|| Zend_Search_Lucene_Analysis_Analyzer_Common_Text_CaseInsensitive         || No          || No             || No                    || No              ||
+|| Zend_Search_Lucene_Analysis_Analyzer_Common_TextNum                      || No          || Yes            || Yes                   || No              || 
+|| Zend_Search_Lucene_Analysis_Analyzer_Common_TextNum_CaseInsensitive      || No          || Yes            || No                    || No              || 
+|| Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8                         || Yes         || No             || Yes                   || No              ||
+|| Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8_CaseInsensitive         || Yes         || No             || No                    || No              ||
+|| Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8Num                      || Yes         || Yes            || Yes                   || No              || 
+|| Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8Num_CaseInsensitive      || Yes         || Yes            || No                    || No              || 
+
+We can set one of these analyzers like so:
+{{{
+$engine->setAnalyzer(new Zend_Search_Lucene_Analysis_Analyzer_Common_TextNum);
+}}}
+
+=== xfLuceneAnalyzer ===
+sfLucene provides an analyzer that makes it easy to configure your exact requirements that supports toggles for:
+  * UTF8 vs ASCII
+  * Numbers vs No Numbers
+  * Case Sensitive vs Case Insensitive
+  * Stemming vs No Stemming
+  * Short Words
+  * Stop Words
+
+Using this analyzer is easy:
+{{{
+#!php
+<?php
+$analyzer = new xfLuceneAnalyzer;
+$analyzer->setCaseInsensitive(); // makes case insensitive
+$analyzer->addStopWords(array('the', 'therefore')); // ignores these words
+$analyzer->addStopWordsFromFile('/path/to/file.txt'); // ignores these words in the file, one word per line
+$analyzer->setShortWordLength(2); // all words less than 2 characters are ignored
+
+$engine->setAnalyzer($analyzer);
+}}}
+
+== Stemming ==
+A stemming algorithm takes a word and gets the root of the word.  For example, "happy" and "happiness" share the same stem.  Stemming is helpful for search engines because if the user searches for "happiness", they likely also want results that match "happy". 
+
+sfLucene ships with a PHP implementation of the PorterStemmer algorithm, a popular stemming algorithm for English-based languages.  To use the PorterStemmer algorithm, we set it up like so:
+{{{
+#!php
+<?php
+$analyzer = new xfLuceneAnalyzer;
+$analyzer->setStemmer(new xfLuceneStemmerPorter);
+
+$engine->setAnalyzer($analyzer);
+}}}
+
+If your index will not store English content or the PorterStemmer algorithm does not suit your needs, it is easy to create your own stemmer.  We simply create a class that implements the xfLuceneStemmer interface:
+{{{
+#!php
+<?php
+final class MyStemmer implements xfLuceneStemmer
+{
+  public function doStem($word)
+  {
+    // stem the word here 
+
+    return $word;
+  }
+}
+}}}
+
+Then:
+{{{
+#!php
+<?php
+$analyzer = new xfLuceneAnalyzer;
+$analyzer->setStemmer(new MyStemmer);
 }}}
