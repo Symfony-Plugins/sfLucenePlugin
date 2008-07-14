@@ -183,9 +183,7 @@ final class xfLuceneEngine implements xfEngine
     $zquery = xfLuceneCriterionRewriter::rewrite($criteria);
     $hits = $this->getIndex()->find($zquery);
 
-    $implementer = new xfLuceneCriterionImplementer($criteria, $zquery);
-
-    return new xfLuceneHits($this, $hits, $implementer);
+    return new xfLuceneHits($this, $hits);
   }
 
   /**

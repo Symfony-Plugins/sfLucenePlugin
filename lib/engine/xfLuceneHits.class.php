@@ -38,13 +38,6 @@ final class xfLuceneHits implements SeekableIterator, Countable
   private $hitCache = array();
 
   /**
-   * The criterion implementer
-   *
-   * @var xfLuceneCriterionImplementer
-   */
-  private $implementer;
-
-  /**
    * The internal pointer
    *
    * @var int
@@ -56,13 +49,11 @@ final class xfLuceneHits implements SeekableIterator, Countable
    *
    * @param xfLuceneEngine $engine The engine where the hits came from
    * @param array $hits The array of hits of Zend_Search_Lucene_Search_QueryHit
-   * @param xfLuceneCriterionImplementer $implementer The criterion implementer
    */
-  public function __construct(xfLuceneEngine $engine, array $hits, xfLuceneCriterionImplementer $implementer)
+  public function __construct(xfLuceneEngine $engine, array $hits)
   {
     $this->engine = $engine;
     $this->hits = $hits;
-    $this->implementer = $implementer;
   }
 
   /**
@@ -77,7 +68,7 @@ final class xfLuceneHits implements SeekableIterator, Countable
       $hit = $this->hits[$this->pointer];
       $doc = $this->engine->unwriteDocument($hit->getDocument());
 
-      $hit = new xfDocumentHit($doc, $this->implementer, array(
+      $hit = new xfDocumentHit($doc, array(
         'score' => $hit->score,
         'id' => $hit->id,
       ));

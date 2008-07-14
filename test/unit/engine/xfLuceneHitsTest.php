@@ -14,8 +14,6 @@ require 'engine/xfEngine.interface.php';
 require 'engine/xfLuceneEngine.class.php';
 require 'criteria/xfCriterion.interface.php';
 require 'criteria/xfCriterionString.class.php';
-require 'criteria/xfCriterionImplementer.interface.php';
-require 'criteria/xfLuceneCriterionImplementer.class.php';
 require 'result/xfDocumentHit.class.php';
 require 'document/xfDocument.class.php';
 require 'document/xfField.class.php';
@@ -23,7 +21,7 @@ require 'document/xfFieldValue.class.php';
 require 'addon/xfLuceneEnhancedFilesystem.class.php';
 require 'util/xfLuceneTokenizer.class.php';
 
-$t = new lime_test(13, new lime_output_color);
+$t = new lime_test(12, new lime_output_color);
 
 $doc = new xfDocument('foobar');
 $doc->addField(new xfFieldValue(new xfField('title', xfField::TEXT), 'foobar'));
@@ -35,16 +33,13 @@ $engine->commit();
 
 $zhits = $engine->getIndex()->find('foobar');
 
-$implementer = new xfLuceneCriterionImplementer(new xfCriterionString('foobar'), Zend_Search_Lucene_Search_QueryParser::parse('foobar'));
-
-$hits = new xfLuceneHits($engine, $zhits, $implementer);
+$hits = new xfLuceneHits($engine, $zhits);
 
 $t->diag('->current()');
 $r = $hits->current();
 $t->isa_ok($r, 'xfDocumentHit', '->current() returns an xfDocumentHit');
 $t->is($r->getOption('score'), $zhits[0]->score, '->current() returns an xfDocumentHit with correct score');
 $t->is($r->getOption('id'), $zhits[0]->id, '->current() returns an xfDocumentHit with correct id');
-$t->is($r->getCriterionImplementer(), $implementer, '->current() returns an xfDocument bound to the implementer');
 $t->is($r->getDocument()->getField('title')->getValue(), 'foobar', '->current() communicates with the unwriter correctly');
 $t->ok($r === $hits->current(), '->current() caches the response');
 
