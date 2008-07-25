@@ -13,13 +13,11 @@ require 'engine/xfLuceneHits.class.php';
 require 'engine/xfEngine.interface.php';
 require 'engine/xfLuceneEngine.class.php';
 require 'criteria/xfCriterion.interface.php';
-require 'criteria/xfCriterionString.class.php';
 require 'result/xfDocumentHit.class.php';
 require 'document/xfDocument.class.php';
 require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
 require 'addon/xfLuceneEnhancedFilesystem.class.php';
-require 'util/xfLuceneTokenizer.class.php';
 
 $t = new lime_test(12, new lime_output_color);
 

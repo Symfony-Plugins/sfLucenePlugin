@@ -180,7 +180,10 @@ final class xfLuceneEngine implements xfEngine
   {
     $this->bind();
 
-    $zquery = xfLuceneCriterionRewriter::rewrite($criteria);
+    $translator = new xfLuceneCriterionTranslator;
+    $criteria->translate($translator);
+    $zquery = $translator->getZendQuery();
+
     $hits = $this->getIndex()->find($zquery);
 
     return new xfLuceneHits($this, $hits);

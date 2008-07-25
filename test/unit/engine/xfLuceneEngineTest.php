@@ -14,16 +14,16 @@ require 'engine/xfEngineException.class.php';
 require 'engine/xfLuceneEngine.class.php';
 require 'engine/xfLuceneHits.class.php';
 require 'util/xfLuceneException.class.php';
-require 'criteria/xfLuceneCriterionRewriter.class.php';
+require 'criteria/xfCriterionTranslator.interface.php';
+require 'criteria/xfLuceneCriterionTranslator.class.php';
 require 'criteria/xfCriterion.interface.php';
-require 'criteria/xfCriterionString.class.php';
+require 'criteria/xfCriterionTerm.class.php';
 require 'document/xfDocument.class.php';
 require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
 require 'result/xfDocumentHit.class.php';
 require 'result/xfResultException.class.php';
 require 'addon/xfLuceneEnhancedFilesystem.class.php';
-require 'util/xfLuceneTokenizer.class.php';
 
 define('LOCATION', dirname(__file__) . '/../../sandbox/index');
 
@@ -184,7 +184,7 @@ try {
 }
 
 $t->diag('->find()');
-$c = new xfCriterionString('carl');
+$c = new xfCriterionTerm('carl');
 $hits = $engine->find($c);
 $t->isa_ok($hits, 'xfLuceneHits', '->find() returns a xfLuceneHits');
 $t->is($hits->count(), 1, '->find() rewrites query into something it can understand');
