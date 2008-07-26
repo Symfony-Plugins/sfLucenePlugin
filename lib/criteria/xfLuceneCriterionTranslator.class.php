@@ -16,8 +16,19 @@
  */
 final class xfLuceneCriterionTranslator implements xfCriterionTranslator
 {
+  /**
+   * Internal constant for a boost modifier.
+   */
   const M_BOOST = 1;
+
+  /**
+   * Internal constant for a requirement modifier (required or prohibited)
+   */
   const M_REQUIREMENT = 2;
+
+  /**
+   * Internal constant for a field modifier.
+   */
   const M_FIELD = 3;
 
   /**
@@ -110,7 +121,7 @@ final class xfLuceneCriterionTranslator implements xfCriterionTranslator
   /**
    * @see xfCriterionTranslator
    */
-  public function setNextRequirement()
+  public function setNextRequired()
   {
     $this->modifiers[self::M_REQUIREMENT] = true;
   }
@@ -118,7 +129,7 @@ final class xfLuceneCriterionTranslator implements xfCriterionTranslator
   /**
    * @see xfCriterionTranslator
    */
-  public function setNextNegate()
+  public function setNextProhibited()
   {
     $this->modifiers[self::M_REQUIREMENT] = false;
   }

@@ -46,12 +46,12 @@ $trans->createTerm('baz');
 $t->is($trans->toString(), 'foo:baz', 'non boolean master');
 
 $trans = new xfLuceneCriterionTranslator;
-$trans->setNextRequirement();
+$trans->setNextRequired();
 $trans->createTerm('foo');
 $t->is($trans->toString(), '+(foo)', 'required query');
 
 $trans = new xfLuceneCriterionTranslator;
-$trans->setNextNegate();
+$trans->setNextProhibited();
 $trans->createTerm('foo');
 $t->is($trans->toString(), '-(foo)', 'prohibited query');
 
