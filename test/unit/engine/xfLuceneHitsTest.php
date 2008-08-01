@@ -19,7 +19,7 @@ require 'document/xfField.class.php';
 require 'document/xfFieldValue.class.php';
 require 'addon/xfLuceneEnhancedFilesystem.class.php';
 
-$t = new lime_test(12, new lime_output_color);
+$t = new lime_test(17, new lime_output_color);
 
 $doc = new xfDocument('foobar');
 $doc->addField(new xfFieldValue(new xfField('title', xfField::TEXT), 'foobar'));
@@ -54,3 +54,13 @@ $t->is($hits->key(), 5, '->seek() advances the pointer');
 
 $t->diag('->count()');
 $t->is($hits->count(), 1,' ->count() counts the number of hits');
+
+$t->diag('serialize(), unserialize()');
+$hits = unserialize(serialize($hits));
+$t->is($hits->key(), 5, 'serialize() stores the pointer position');
+$hits->rewind();
+$r = $hits->current();
+$t->isa_ok($r, 'xfDocumentHit', 'unserialize() restores the hits');
+$t->is($r->getOption('score'), $zhits[0]->score, 'unserialize() restores scores');
+$t->is($r->getOption('id'), $zhits[0]->id, 'unserialize() restores ids');
+$t->is($r->getDocument()->getField('title')->getValue(), 'foobar', 'unserialize() restores field values');

@@ -14,7 +14,7 @@
  * @subpackage Engine
  * @author Carl Vondrick
  */
-final class xfLuceneHits implements SeekableIterator, Countable
+final class xfLuceneHits implements SeekableIterator, Countable, Serializable
 {
   /**
    * The engine
@@ -131,5 +131,48 @@ final class xfLuceneHits implements SeekableIterator, Countable
   public function count()
   {
     return count($this->hits);
+  }
+
+  /**
+   * Magic method for serializing.
+   *
+   * @returns string The serialization
+   */
+  public function serialize()
+  {
+    $data = array();
+    $data['engine'] = $this->engine;
+    $data['pointer'] = $this->pointer;
+
+    $data['cache'] = array();
+    foreach ($this->hits as $hit)
+    {
+      $data['cache'][$hit->id] = $hit->score;
+    }
+    
+    return serialize($data);
+  }
+
+  /**
+   * Magic method for unserializing
+   *
+   * @param string $serialized The serialized string
+   */
+  public function unserialize($serialized)
+  {
+    $data = unserialize($serialized);
+
+    $this->engine = $data['engine'];
+
+    foreach ($data['cache'] as $id => $score)
+    {
+      $hit = new Zend_Search_Lucene_Search_QueryHit($this->engine->getIndex());
+      $hit->id = $id;
+      $hit->score = $score;
+
+      $this->hits[] = $hit;
+    }
+
+    $this->pointer = $data['pointer'];
   }
 }

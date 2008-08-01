@@ -17,7 +17,7 @@ xfLuceneZendManager::load();
  * @subpackage Engine
  * @author Carl Vondrick
  */
-final class xfLuceneEngine implements xfEngine
+final class xfLuceneEngine implements xfEngine, Serializable
 {
   /**
    * The sfLucene version
@@ -84,6 +84,16 @@ final class xfLuceneEngine implements xfEngine
   }
 
   /**
+   * Gets the index location
+   *
+   * @returns string
+   */
+  public function getLocation()
+  {
+    return $this->location;
+  }
+
+  /**
    * Configures the index for batch processing
    */
   public function enableBatchMode()
@@ -118,11 +128,11 @@ final class xfLuceneEngine implements xfEngine
 
       if (file_exists($this->location . '/segments.gen'))
       {
-        $this->index = Zend_Search_Lucene::open($fs);
+        $this->index = new Zend_Search_Lucene($fs, false);
       }
       else
       {
-        $this->index = Zend_Search_Lucene::create($fs);
+        $this->index = new Zend_Search_Lucene($fs, true);
       }
     }
   }
@@ -372,6 +382,14 @@ final class xfLuceneEngine implements xfEngine
   }
 
   /**
+   * @see xfEngine
+   */
+  public function id()
+  {
+    return sha1('ZSL_' . $this->location);
+  }
+
+  /**
    * Gets the byte size of the index.
    *
    * @returns int The size in bytes
@@ -411,6 +429,39 @@ final class xfLuceneEngine implements xfEngine
     $this->bind();
 
     return $this->index;
+  }
+
+  /**
+   * Magic method for serializing
+   *
+   * @returns string The serialized data
+   */
+  public function serialize()
+  {
+    $data = array();
+    $data['open'] = $this->index ? true : false;
+    $data['location'] = $this->location;
+    $data['analyzer'] = $this->analyzer;
+
+    return serialize($data);
+  }
+
+  /**
+   * Magic method for unserializing
+   *
+   * @param string $serialized the serialized data
+   */
+  public function unserialize($serialized)
+  {
+    $data = unserialize($serialized);
+    
+    $this->location = $data['location'];
+    $this->analyzer = $data['analyzer'];
+
+    if ($data['open'])
+    {
+      $this->open();
+    }
   }
 
   /**

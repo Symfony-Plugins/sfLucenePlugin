@@ -45,14 +45,14 @@ else
   mkdir(LOCATION, 0777, true);
 }
 
-$t = new lime_test(66, new lime_output_color);
+$t = new lime_test(69, new lime_output_color);
 
 $engine = new xfLuceneEngine(LOCATION);
 
 $t->diag('->open(), ->close()');
 $engine->open();
 $index = $engine->getIndex();
-$t->isa_ok($index, 'Zend_Search_Lucene_Proxy', '->open() opens the index');
+$t->isa_ok($index, 'Zend_Search_Lucene', '->open() opens the index');
 $engine->open();
 $t->ok($index === $engine->getIndex(), '->open() does not open another index if it is already open');
 $engine->close();
@@ -64,7 +64,7 @@ try {
   $t->pass($msg);
 }
 $engine->open();
-$t->isa_ok($engine->getIndex(), 'Zend_Search_Lucene_Proxy', '->open() can reopen the index');
+$t->isa_ok($engine->getIndex(), 'Zend_Search_Lucene', '->open() can reopen the index');
 
 $t->diag('->getAnalyzer(), ->setAnalyzer()');
 $t->isa_ok($engine->getAnalyzer(), 'Zend_Search_Lucene_Analysis_Analyzer_Common_Utf8Num_CaseInsensitive', '->getAnalyzer() is UTF8, number, and case insensitive by default');
@@ -239,3 +239,11 @@ try {
 }
 $engine->open();
 $t->is($engine->count(), 0, '->erase() empties the index if it is closed');
+
+$t->diag('->id()');
+$t->isa_ok($engine->id(), 'string', '->id() returns a string');
+
+$t->diag('serialize(), unserialize()');
+$engine = unserialize(serialize($engine));
+$t->isa_ok($engine->getAnalyzer(), 'FooAnalyzer', 'unserialize() restores the analyzer');
+$t->is($engine->getLocation(), LOCATION, 'unserialize() restores the location');
