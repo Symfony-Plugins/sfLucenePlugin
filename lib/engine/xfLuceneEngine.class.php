@@ -169,7 +169,7 @@ final class xfLuceneEngine implements xfEngine, Serializable
       {
         if (!$file->isDot())
         {
-          unlink($file->getRealpath());
+          unlink($file->getPath());
         }
       }
     }
